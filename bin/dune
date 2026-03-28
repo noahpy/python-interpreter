@@ -1,0 +1,4 @@
+(executable
+ (public_name python-interpreter)
+ (name main)
+ (libraries python_interpreter))
