@@ -1,4 +1,6 @@
 
+(* Abstract syntax tree of python subset *)
+
 type value =
     | IntV of int
     | FloatV of float
@@ -25,15 +27,17 @@ type expr =
     | Value of value
     | Bin_Exp of (expr * bin_op * expr)
     | Variable of string
-    | Print of expr
+    | Func_App of (string * expr list)
 
-type assignment = (string * expr)
 
 type statement = 
     | Expr of expr
-    | Assign of assignment
+    | Assign of (string * expr)
+    | Func_Def of (string * expr)
 
 type program = statement list
+
+(* Helper functions *)
 
 let value_to_output val_x =
     match val_x with

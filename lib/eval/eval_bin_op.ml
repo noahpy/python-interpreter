@@ -1,7 +1,9 @@
 
 open Ast
 
-let ops_casting val1 val2 =
+(* Although implicit casting varies from operand to operand in Python,
+   we generalize it here for simplicity. *)
+let implicit_casting (val1: value) (val2: value) : (value * value) =
     match (val1 , val2) with
       | (IntV x1, IntV x2) -> (IntV x1, IntV x2)
       | (IntV x1, FloatV x2) -> (FloatV (float_of_int x1), FloatV x2)
@@ -23,12 +25,13 @@ let ops_casting val1 val2 =
       | _ -> (Exception "We do not support this implicit type conversion.", Exception "")
 
 
-let eval_int_op x1 op x2 = 
+(* Evaluation functions for each value type *)
+let eval_int_op (x1: int) (op: bin_op) (x2: int) : value = 
     match op with
       | Add -> IntV(x1 + x2)
       | Mul -> IntV(x1 * x2)
       | Sub -> IntV(x1 - x2)
-      | Div -> IntV(x1 / x2)
+      | Div -> if x2 = 0 then Exception "ZeroDivisionError: division by zero" else IntV(x1 / x2)
       | Less -> BoolV(x1 < x2)
       | Greater -> BoolV(x1 > x2)
       | Leq -> BoolV(x1 <= x2)
@@ -39,12 +42,12 @@ let eval_int_op x1 op x2 =
       | Or -> IntV(min x1 x2)
 
 
-let eval_float_op x1 op x2 = 
+let eval_float_op (x1: float) (op: bin_op) (x2: float) : value = 
     match op with
       | Add -> FloatV(x1 +. x2)
       | Mul -> FloatV(x1 *. x2)
       | Sub -> FloatV(x1 -. x2)
-      | Div -> FloatV(x1 /. x2)
+      | Div -> if x2 = 0.0 then Exception "ZeroDivisionError: float division by zero" else FloatV(x1 /. x2)
       | Less -> BoolV(x1 < x2)
       | Greater -> BoolV(x1 > x2)
       | Leq -> BoolV(x1 <= x2)
@@ -55,7 +58,7 @@ let eval_float_op x1 op x2 =
       | Or -> FloatV(min x1 x2)
 
 
-let eval_string_op x1 op x2 = 
+let eval_string_op (x1: string) (op: bin_op) (x2: string) : value = 
     match op with
       | Add -> StringV(String.concat "" [x1; x2])
       | Less -> BoolV(x1 < x2)
@@ -67,7 +70,7 @@ let eval_string_op x1 op x2 =
       | _ -> Exception "Operation not supported for type string"
 
 
-let eval_bool_op x1 op x2 = 
+let eval_bool_op (x1: bool) (op: bin_op) (x2: bool) : value = 
     match op with
       | And -> BoolV(x1 && x2)
       | Or -> BoolV(x1 || x2)
