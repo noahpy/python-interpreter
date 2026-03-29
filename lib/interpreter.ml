@@ -1,6 +1,5 @@
 
 open Ast
-open Program_state
 open Eval
 
 let rec interpret (prog:program_state) : unit = 
