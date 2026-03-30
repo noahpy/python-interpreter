@@ -28,7 +28,7 @@ let rec interpret (prog:program_state) : unit =
         in Hashtbl.add prog.variables name cleaned_exp
     in let interpret_helper (stat: statement) (prog:program_state) : unit = 
         match stat with
-          | Expr(exp) -> Eval_ex.eval_expr exp prog |> value_to_output
+          | Expr(exp) -> Eval_ex.eval_expr_top exp prog
           | Assign(name, exp) -> assign_var name exp prog
           | Func_Def(name, exp) -> print_endline "Function definition not implemented!"
     in match prog.program with

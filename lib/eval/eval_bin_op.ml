@@ -21,6 +21,9 @@ let implicit_casting (val1: value) (val2: value) : (value * value) =
       | (BoolV x1, StringV x2) -> (StringV (string_of_bool x1), StringV x2)
       | (StringV x1, BoolV x2) -> (StringV x1, StringV (string_of_bool x2))
       | (BoolV x1, BoolV x2) -> (BoolV x1, BoolV x2)
+      (* Pass on exceptions *)
+      | (Exception e1, x) -> (Exception e1, x)
+      | (x, Exception e2) -> (x, Exception e2)
       (* Match all rest cases including Ntwo and Exception *)
       | _ -> (Exception "We do not support this implicit type conversion.", Exception "")
 

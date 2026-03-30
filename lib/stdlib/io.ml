@@ -4,16 +4,28 @@ open Ast
 
 let rec print_impl (args: value list) (state: program_state) : value = 
     (* Implementation of python print function.*)
-    let print_helpler (v: value) : unit =
+    let print_helpler (v: value) : (string, string) result =
         match v with
-          | IntV x -> print_int x; print_string " " 
-          | FloatV x -> print_float x; print_string " "
-          | StringV x -> print_string x; print_string " "
-          | BoolV x -> print_string (if x then "True" else "False"); print_string " "
-          | Exception x -> print_string x; print_string " "
-          | Ntwo -> print_string "None"; print_string " "
-          | Function f -> print_string "Function"; print_string " "
-    in List.iter print_helpler args; print_newline(); Ntwo
+          | IntV x -> Ok(string_of_int x)
+          | FloatV x -> Ok(string_of_float x)
+          | StringV x -> Ok x
+          | BoolV x -> Ok(if x then "True" else "False")
+          | Exception x -> Error(x)
+          | Ntwo -> Ok "None"
+          | Function f -> Ok "Function"
+    in let rec assemble_strings (args: value list) : (string, string) result = 
+        match args with
+          | [] -> Ok("")
+          | h::r -> let res = assemble_strings r in
+                    let h_res = print_helpler h in
+                    match (h_res, res) with
+                      | (Ok(x1), Ok(x2)) -> Ok(x1^" "^x2)
+                      | (Error(x1), Error(x2)) -> Error(x1^"\nand\n"^x2)
+                      | (Error(x1), _) -> Error(x1)
+                      | (_, Error(x2)) -> Error(x2)
+    in match assemble_strings args with
+      | Ok(x) -> print_endline x; Ntwo;
+      | Error(x) -> Exception(x)
 
 
 let load_impls (state: program_state) : unit = 

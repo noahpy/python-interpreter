@@ -1,12 +1,11 @@
 
 open Ast
 
+
 let rec eval_expr (ex: expr) (state: program_state): value =
-    (* Top-level evaluation function for expressions. Converts them into a value.*)
+    (* Recursive evaluation function for expressions. Converts them into a value.*)
     match ex with
-      | Value(val_x) -> (match val_x with
-                         | Exception(msg) -> print_endline msg; raise (Failure "Program failed.")
-                         | _ -> val_x)
+      | Value(val_x) -> val_x
       | Bin_Exp(ex1, op, ex2) -> eval_bin_op ex1 op ex2 state
       | Var_Ref(name) -> eval_var name state
       | Func_App(name, expressions) -> eval_func_app name expressions state
@@ -20,7 +19,9 @@ and eval_bin_op (ex1: expr) (op: bin_op) (ex2: expr) (state: program_state) : va
       | (FloatV x1, FloatV x2) -> Eval_bin_op.eval_float_op x1 op x2
       | (StringV x1, StringV x2) -> Eval_bin_op.eval_string_op x1 op x2
       | (BoolV x1, BoolV x2) -> Eval_bin_op.eval_bool_op x1 op x2
-      | (Exception e1, Exception e2) -> Exception (e1)
+      | (Exception e1, Exception e2) -> Exception (e1 ^ "\nand\n" ^ e2)
+      | (Exception e1, _) -> Exception(e1)
+      | (_, Exception e2) -> Exception(e2)
       | _ -> Exception "Can not operate on these types: Implicit type conversion missing."
 
 and eval_var (name: string) (state: program_state) : value = 
@@ -50,3 +51,14 @@ and eval_func_app (name: string) (expressions: expr list) (state: program_state)
     in match Hashtbl.find_opt state.variables name with
       | Some(v) -> handle_variable v
       | None -> Exception (String.concat "" ["NameError: name '";name;"' is not defined"])
+
+
+let eval_expr_top (ex: expr) (state: program_state) : unit = 
+    (* Top-level evaluation function. Handles Exceptions if they come up. *)
+    match eval_expr ex state with
+      | Exception(e) -> print_newline();
+                        print_endline ("Exception at line " ^ string_of_int state.ip ^ ":");
+                        print_endline e; 
+                        raise (Failure "Program failed.")
+      | x -> print_endline "!";value_to_output x
+
