@@ -2,7 +2,7 @@
 open Ast
 
 
-let rec print_impl (args: value list) (state: program_state) : value = 
+let print_impl (args: value list) (state: program_state) : value = 
     (* Implementation of python print function.*)
     let print_helpler (v: value) : (string, string) result =
         match v with
@@ -28,6 +28,14 @@ let rec print_impl (args: value list) (state: program_state) : value =
       | Error(x) -> Exception(x)
 
 
+let input_impl (args: value list) (state: program_state) : value = 
+    (* Implementation of python input function.*)
+    match Helper.check_arg_count args 0 1 "input" with
+      | Ok() -> print_string (value_to_str (List.hd args)); StringV (read_line ())
+      | Error(x) -> Exception(x)
+
+
 let load_impls (state: program_state) : unit = 
     (* Load standard library functions implemented in this module. *)
-    Hashtbl.add state.variables "print" (Value(Function(print_impl)))
+    Hashtbl.add state.variables "print" (Value(Function(print_impl)));
+    Hashtbl.add state.variables "input" (Value(Function(input_impl)))
