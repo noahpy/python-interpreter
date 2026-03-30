@@ -60,5 +60,5 @@ let eval_expr_top (ex: expr) (state: program_state) : unit =
                         print_endline ("Exception at line " ^ string_of_int state.ip ^ ":");
                         print_endline e; 
                         raise (Failure "Program failed.")
-      | x -> print_endline "!";value_to_output x
+      | x -> () (*value_to_output x*)
 
