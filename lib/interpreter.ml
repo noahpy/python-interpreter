@@ -5,7 +5,7 @@ open Eval
 let init_program_state (lines: statement list) (var_size: int): program_state =
     let varH = Hashtbl.create var_size in 
     let p = {program = lines; ip = 0; variables = varH;} in
-    Stdlib.Load.load_impls p; p
+    Python_stdlib.Load.load_impls p; p
 
 
 let rec interpret (prog:program_state) : unit = 
