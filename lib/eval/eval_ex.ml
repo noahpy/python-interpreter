@@ -4,7 +4,9 @@ open Ast
 let rec eval_expr (ex: expr) (state: program_state): value =
     (* Top-level evaluation function for expressions. Converts them into a value.*)
     match ex with
-      | Value(val_x) -> val_x
+      | Value(val_x) -> (match val_x with
+                         | Exception(msg) -> print_endline msg; raise (Failure "Program failed.")
+                         | _ -> val_x)
       | Bin_Exp(ex1, op, ex2) -> eval_bin_op ex1 op ex2 state
       | Var_Ref(name) -> eval_var name state
       | Func_App(name, expressions) -> eval_func_app name expressions state
