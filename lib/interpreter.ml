@@ -8,7 +8,6 @@ let init_program_state (lines: statement list) (var_size: int): program_state =
     Stdlib.Load.load_impls p; p
 
 
-
 let rec interpret (prog:program_state) : unit = 
     let assign_var (name: string) (exp: expr) (prog: program_state) : unit =
     (* Handle variable assignment *)
