@@ -55,6 +55,37 @@ and program_state = {
 
 (* Helper functions *)
 
+let rec expr_to_str (exp: expr) : string =
+    let value_to_str (val_x: value) : string =
+        match val_x with
+          | IntV x -> string_of_int x
+          | FloatV x -> string_of_float x
+          | StringV x -> x
+          | BoolV x -> string_of_bool x
+          | Exception x -> x
+          | Ntwo -> "None"
+          | Function f -> "Function"
+    and bin_op_to_str (op: bin_op) : string =
+        match op with
+          | Add -> "+"
+          | Mul -> "*"
+          | Sub -> "-"
+          | Div -> "/"
+          | And -> "and"
+          | Or -> "or"
+          | Less -> "<"
+          | Greater -> ">"
+          | Leq -> "<="
+          | Geq -> ">="
+          | Equal -> "=="
+          | Neq -> "!="
+    in 
+    match exp with
+      | Value x -> value_to_str x
+      | Bin_Exp (x1, op, x2) -> "(" ^ (expr_to_str x1) ^ " " ^ (bin_op_to_str op) ^ " " ^ (expr_to_str x2) ^ ")"
+      | Var_Ref x -> x
+      | Func_App (x, args) -> x ^ "(" ^ String.concat ", " (List.map expr_to_str args) ^ ")"
+
 let value_to_output val_x =
     match val_x with
       | IntV x -> print_int x; print_newline();
@@ -64,3 +95,4 @@ let value_to_output val_x =
       | Exception x -> print_string x; print_newline();
       | Ntwo -> print_string "None"; print_newline();
       | Function f -> print_string "Function"; print_newline();
+
