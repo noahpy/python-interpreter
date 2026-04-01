@@ -9,7 +9,7 @@ open Stdio
    argument values. Then, it evaluates the expression and saves the result to the program 
    state. Then, it destructs all local assignments before exiting. If there is a Exception
    created at some point, it should be passed up. *)
-type func_unapp = value list -> program_state -> value
+type func_unapp = value list -> program_state -> value [@sexp.opaque]
 
 
 (* Abstract syntax tree of python subset *)
@@ -22,6 +22,7 @@ and value =
     | Ntwo
     | Exception of string
     | Function of func_unapp
+[@@deriving sexp]
 
 and bin_op = 
     | Add
@@ -36,26 +37,28 @@ and bin_op =
     | Geq
     | Equal
     | Neq
+[@@deriving sexp]
 
 and expr = 
     | Value of value
     | Bin_Exp of (expr * bin_op * expr)
     | Var_Ref of string
     | Func_App of (string * expr list)
+[@@deriving sexp]
 
 and statement = 
     | Expr of expr
     | Assign of (string * expr)
     | Func_Def of (string * expr)
-
-and program = statement list
+[@@deriving sexp]
 
 (* Program state: Used to keep track of variables (including functions) and current position. *)
 and program_state = {
-    program: program;
+    program: statement list;
     ip: int;
-    variables: (string, expr) Hashtbl.t;
+    variables: expr Hashtbl.M(String).t;
 }
+[@@deriving sexp]
 
 (* Helper functions *)
 
