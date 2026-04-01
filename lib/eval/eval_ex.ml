@@ -53,12 +53,12 @@ and eval_func_app (name: string) (expressions: expr list) (state: program_state)
       | None -> Exception (String.concat "" ["NameError: name '";name;"' is not defined"])
 
 
-let eval_expr_top (ex: expr) (state: program_state) : unit = 
+let eval_expr_top ?(print_values:bool=false) (ex: expr) (state: program_state) : unit = 
     (* Top-level evaluation function. Handles Exceptions if they come up. *)
     match eval_expr ex state with
       | Exception(e) -> print_newline();
                         print_endline ("Exception at line " ^ string_of_int state.ip ^ ":");
                         print_endline e; 
                         raise (Failure "Program failed.")
-      | x -> () (*value_to_output x*)
+      | x -> if print_values then value_to_output x else ()
 
