@@ -1,9 +1,11 @@
 
+open Base
+open Stdio
 open Ast
 open Eval
 
 let init_program_state (lines: statement list) (var_size: int): program_state =
-    let varH = Hashtbl.create var_size in 
+    let varH = Hashtbl.create (module String) in 
     let p = {program = lines; ip = 0; variables = varH;} in
     Python_stdlib.Load.load_impls p; p
 
@@ -15,16 +17,16 @@ let rec interpret (prog:program_state) : unit =
         (* Remove self-reference of variable being assigned. *)
             match exp with
               | Value(x) -> exp;
-              | Var_Ref(x) -> if x = name then
-                                match Hashtbl.find_opt prog.variables x with
+              | Var_Ref(x) -> if String.equal x name then
+                                match Hashtbl.find prog.variables x with
                                   | Some(v) -> v
-                                  | None -> let msg = String.concat "" ["NameError: name '";x;"' is not defined"]
+                                  | None -> let msg = String.concat ["NameError: name '";x;"' is not defined"]
                                             in Value(Exception(msg))
                               else exp
               | Bin_Exp(x1, op, x2) -> Bin_Exp(remove_self_ref x1, op, remove_self_ref x2)
-              | Func_App(x, args) -> Func_App(x, List.map remove_self_ref args)
+              | Func_App(x, args) -> Func_App(x, List.map args ~f:remove_self_ref)
         in let cleaned_exp = remove_self_ref exp
-        in Hashtbl.add prog.variables name cleaned_exp
+        in Hashtbl.set prog.variables ~key:name ~data:cleaned_exp
     in let interpret_helper (stat: statement) (prog:program_state) : unit = 
         match stat with
           | Expr(exp) -> Eval_ex.eval_expr_top exp prog

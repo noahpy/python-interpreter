@@ -9,7 +9,8 @@ depends: [
   "dune" {>= "3.21"}
   "ocaml"
   "base"
-  "ppx_expect"
+  "ppx_jane"
+  "stdio"
   "odoc" {with-doc}
 ]
 build: [

@@ -16,7 +16,8 @@
  (depends
    ocaml
    base
-   ppx_expect
+   ppx_jane
+   stdio
  )
 )
 

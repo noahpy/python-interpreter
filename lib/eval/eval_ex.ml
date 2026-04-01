@@ -1,4 +1,6 @@
 
+open Base
+open Stdio
 open Ast
 
 
@@ -31,10 +33,10 @@ and eval_var (name: string) (state: program_state) : value =
         match var with 
           | Value(v) -> v
           | _ -> let res = eval_expr var state 
-                 in Hashtbl.replace state.variables name (Value(res)); res
-    in match Hashtbl.find_opt state.variables name with
+                 in Hashtbl.set state.variables ~key:name ~data:(Value(res)); res
+    in match Hashtbl.find state.variables name with
       | Some(v) -> handle_variable v
-      | None -> Exception (String.concat "" ["NameError: name '";name;"' is not defined"])
+      | None -> Exception (String.concat ["NameError: name '";name;"' is not defined"])
 
 and eval_func_app (name: string) (expressions: expr list) (state: program_state) : value =
     (* Top-level evaluation function for function applications. *)
@@ -47,17 +49,17 @@ and eval_func_app (name: string) (expressions: expr list) (state: program_state)
         (* Determine if a variable is a function and apply it.*)
         match var with
           | Value(Function(f)) -> f (eval_arguments expressions) state
-          | _ -> Exception (String.concat "" ["EvalError: Variable ";name;" can not be evalueted with applying."])
-    in match Hashtbl.find_opt state.variables name with
+          | _ -> Exception (String.concat ["EvalError: Variable ";name;" can not be evalueted with applying."])
+    in match Hashtbl.find state.variables name with
       | Some(v) -> handle_variable v
-      | None -> Exception (String.concat "" ["NameError: name '";name;"' is not defined"])
+      | None -> Exception (String.concat ["NameError: name '";name;"' is not defined"])
 
 
 let eval_expr_top ?(print_values:bool=false) (ex: expr) (state: program_state) : unit = 
     (* Top-level evaluation function. Handles Exceptions if they come up. *)
     match eval_expr ex state with
-      | Exception(e) -> print_newline();
-                        print_endline ("Exception at line " ^ string_of_int state.ip ^ ":");
+      | Exception(e) -> print_endline "";
+                        print_endline ("Exception at line " ^ Int.to_string state.ip ^ ":");
                         print_endline e; 
                         raise (Failure "Program failed.")
       | x -> if print_values then value_to_output x else ()
