@@ -4,8 +4,8 @@ open Stdio
 open Ast
 open Eval
 
-let init_program_state (lines: statement list) (var_size: int): program_state =
-    let varH = Hashtbl.create (module String) in 
+let init_program_state ?(var_size: int=1) (lines: statement list) : program_state =
+    let varH = Hashtbl.create ~size:var_size (module String) in 
     let p = {program = lines; ip = 0; variables = varH;} in
     Python_stdlib.Load.load_impls p; p
 
