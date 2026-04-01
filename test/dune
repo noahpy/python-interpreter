@@ -1,3 +1,7 @@
-(test
+
+(library
  (name test_python_interpreter)
- (libraries python_interpreter))
+ (libraries python_interpreter base stdio)
+ (inline_tests)
+ (preprocess (pps ppx_expect ppx_sexp_conv ppx_sexp_value))
+ )
