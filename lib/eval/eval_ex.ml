@@ -2,6 +2,7 @@
 open Base
 open Stdio
 open Ast
+open Utils
 
 
 let rec eval_expr (ex: expr) (state: program_state): value =
@@ -33,24 +34,33 @@ and eval_var (name: string) (state: program_state) : value =
         match var with 
           | Value(v) -> v
           | _ -> let res = eval_expr var state 
-                 in Hashtbl.set state.variables ~key:name ~data:(Value(res)); res
-    in match Hashtbl.find state.variables name with
+                 in Hashtbl.add_multi state.variables ~key:name ~data:(Value(res)); res
+    in match Hash_utils.get_variable state name with
       | Some(v) -> handle_variable v
       | None -> Exception (String.concat ["NameError: name '";name;"' is not defined"])
 
 and eval_func_app (name: string) (expressions: expr list) (state: program_state) : value =
     (* Top-level evaluation function for function applications. *)
-    let rec eval_arguments (arguments: expr list) : value list = 
+    let rec eval_arguments (arguments: expr list) : expr list = 
         (* Evaluate a list of expressions into a list of values.*)
         match arguments with
           | [] -> []
-          | h::r -> (eval_expr h state) :: (eval_arguments r) 
+          | h::r -> Value(eval_expr h state) :: (eval_arguments r) 
     in let handle_variable (var: expr) : value =
         (* Determine if a variable is a function and apply it.*)
+        let call_function (f: func_unapp) (f_on: func_oncall) 
+                          (f_off: func_offcall) (args: expr list) (state: program_state) : value =
+            match f_on args state with
+              | Ok() -> let res = f state in   
+                        (match f_off state with
+                          | Ok() -> res
+                          | Error(e) -> Exception e)
+              | Error(e) -> Exception e
+        in
         match var with
-          | Value(Function(f)) -> f (eval_arguments expressions) state
+          | Value(Function(f, f_on, f_off)) -> call_function f f_on f_off (eval_arguments expressions) state
           | _ -> Exception (String.concat ["EvalError: Variable ";name;" can not be evalueted with applying."])
-    in match Hashtbl.find state.variables name with
+    in match Hash_utils.get_variable state name with
       | Some(v) -> handle_variable v
       | None -> Exception (String.concat ["NameError: name '";name;"' is not defined"])
 
