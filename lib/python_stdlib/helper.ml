@@ -6,7 +6,7 @@ module Helper_Checks = struct
     let check_arg_count (arguments: expr list) (lower: int) (higher: int) (fun_name: string): (unit, string) Result.t= 
         let len = List.length arguments in
         if len >= lower && (len <= higher || higher = -1) then Ok() 
-        else let msg = String.concat ["TypeError:";fun_name;"takes from";(Int.to_string lower);"to";(Int.to_string higher);"positional arguments but";(Int.to_string len);"were given"]
+        else let msg = String.concat ~sep:" " ["TypeError:";fun_name;"takes from";(Int.to_string lower);"to";(Int.to_string higher);"positional arguments but";(Int.to_string len);"were given"]
              in Error(msg)
 
     let check_args_are_values (args: expr list) : (unit, string) Result.t =

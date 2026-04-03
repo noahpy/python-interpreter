@@ -40,7 +40,7 @@ end
 
 module Input_impl = struct
 
-    let f_on:func_oncall = Helper.Helper_Generator.generate_fon_args 0 (-1) "print"
+    let f_on:func_oncall = Helper.Helper_Generator.generate_fon_args 0 1 "input"
 
     let f_off:func_offcall = Helper.Helper_Generator.generate_foff_args ()
 
