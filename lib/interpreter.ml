@@ -5,10 +5,10 @@ open Ast
 open Eval
 open Utils
 
-let init_program_state ?(var_size: int=1) (lines: statement list) : program_state =
+let init_program_state ?(var_size: int=1) ?(load_stdlib: bool=false) (lines: statement list) : program_state =
     let varH = Hashtbl.create ~size:var_size (module String) in 
     let p = {program = lines; ip = 0; variables = varH;} in
-    Python_stdlib.Load.load_impls p; p
+    if load_stdlib then (Python_stdlib.Load.load_impls p; p) else p
 
 
 let rec interpret (prog:program_state) : unit = 

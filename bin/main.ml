@@ -11,6 +11,6 @@ let () =
     let line4 = Expr(Func_App("print", [Value(IntV 10); Var_Ref("x")])) in
     (* let line5 = Expr(Func_App("print", [Func_App("input", [Value(StringV "Enter a number: ")])])) in *)
     let lines = [line1; line2; line3; line4;] in 
-    let p = Interpret.init_program_state lines in
+    let p = Interpret.init_program_state ~load_stdlib:true lines in
     Interpret.interpret p
 
