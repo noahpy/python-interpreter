@@ -18,12 +18,11 @@ let rec interpret (prog:program_state) : unit =
         (* Remove self-reference of variable being assigned. *)
             match exp with
               | Value(x) -> exp;
-              | Var_Ref(x) -> if String.equal x name then
-                                match Hash_utils.get_variable prog x with
+              | Var_Ref(x) -> (match Hash_utils.get_variable prog x with
                                   | Some(v) -> v
                                   | None -> let msg = String.concat ["NameError: name '";x;"' is not defined"]
                                             in Value(Exception(msg))
-                              else exp
+                              )
               | Bin_Exp(x1, op, x2) -> Bin_Exp(remove_self_ref x1, op, remove_self_ref x2)
               | Func_App(x, args) -> Func_App(x, List.map args ~f:remove_self_ref)
         in let cleaned_exp = remove_self_ref exp
