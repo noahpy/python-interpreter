@@ -1,6 +1,7 @@
 open Base
 open Stdio
 open Ast
+open Utils
 
 
 module Print_impl = struct
@@ -25,14 +26,14 @@ module Print_impl = struct
                           | (Error(x1), Error(x2)) -> Error(x1^"\nand\n"^x2)
                           | (Error(x1), _) -> Error(x1)
                           | (_, Error(x2)) -> Error(x2)
-        in let args_exp = Hashtbl.find_multi state.variables "__args" |> List.hd
+        in let args_exp = Hash_utils.get_variable state "__args"
         in match args_exp with
           | Some(Value(ListV(args))) ->
              (match assemble_strings args with
               | Ok(x) -> print_endline x; Ntwo;
               | Error(x) -> Exception(x)
              )
-          | Some(_) -> Exception("TypeError: print only accepts lists!")
+          | Some(_) -> Exception("TypeError: print only accepts list value in __args!")
           | None -> Exception("__args not found!")
 end
 
@@ -45,14 +46,15 @@ module Input_impl = struct
 
     let f (state: program_state) : value = 
         (* Implementation of python input function.*)
-        let args_exp = Hashtbl.find_multi state.variables "__args" |> List.hd
+        let args_exp = Hash_utils.get_variable state "__args"
         in match args_exp with
-          | Some(Value(ListV(args))) -> print_string (exprs_to_str args);
-                    (match In_channel.input_line stdin with
-                      | Some(x) -> StringV(x)
-                      | None -> Exception("Failed to read from stdin.")
-                    )
-          | Some(_) -> Exception("TypeError: print only accepts lists!")
+          | Some(Value(ListV(args))) -> Out_channel.output_string stdout (exprs_to_str args);
+                                        Out_channel.flush stdout;
+                                        (match In_channel.input_line stdin with
+                                          | Some(x) -> StringV(x)
+                                          | None -> Exception("Failed to read from stdin.")
+                                        )
+          | Some(_) -> Exception("TypeError: input only accepts list value in __args!")
           | None -> Exception("__args not found!")
 
 end
