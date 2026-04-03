@@ -55,3 +55,146 @@ let%expect_test "eval_expr: eval Ntwo value" =
     print_s [%sexp (p: program_state)];
     [%expect {| ((program ()) (ip 0) (variables ())) |}]
 
+
+(* Variable evaluation *)
+
+let%expect_test "eval_expr: eval undeclared variable" =
+    let p = Interpreter.init_program_state [] in
+    Interpreter.interpret p;
+    let r1 = Eval.Eval_ex.eval_expr (Var_Ref "x") p in
+    print_s [%sexp (r1: value)];
+    [%expect {| (Exception "NameError: name 'x' is not defined") |}];
+    print_s [%sexp (p: program_state)];
+    [%expect {| ((program ()) (ip 0) (variables ())) |}]
+
+let%expect_test "eval_expr: eval single variable" =
+    let p = Interpreter.init_program_state [Assign("x", Value(IntV 1))] in
+    Interpreter.interpret p;
+    let r1 = Eval.Eval_ex.eval_expr (Var_Ref "x") p in
+    print_s [%sexp (r1: value)];
+    [%expect {| (IntV 1) |}];
+    print_s [%sexp (p: program_state)];
+    [%expect {|
+      ((program ((Assign (x (Value (IntV 1)))))) (ip 0)
+       (variables ((x ((Value (IntV 1)))))))
+      |}]
+
+let%expect_test "eval_expr: eval multiple variable" =
+    let lines = [Assign("x", Value(IntV 1)); Assign("y", Value(IntV 2))] in 
+    let p = Interpreter.init_program_state lines in
+    Interpreter.interpret p;
+    let r1 = Eval.Eval_ex.eval_expr (Bin_Exp(Var_Ref "x", Add, Var_Ref "y")) p in
+    print_s [%sexp (r1: value)];
+    [%expect {| (IntV 3) |}];
+    print_s [%sexp (p: program_state)];
+    [%expect {|
+      ((program ((Assign (x (Value (IntV 1)))) (Assign (y (Value (IntV 2))))))
+       (ip 0) (variables ((x ((Value (IntV 1)))) (y ((Value (IntV 2)))))))
+      |}]
+
+let%expect_test "eval_expr: eval two variables with one missing" =
+    let p = Interpreter.init_program_state [Assign("x", Value(IntV 1))] in
+    Interpreter.interpret p;
+    let r1 = Eval.Eval_ex.eval_expr (Bin_Exp(Var_Ref "x", Add, Var_Ref "y")) p in
+    print_s [%sexp (r1: value)];
+    [%expect {| (Exception "NameError: name 'y' is not defined") |}];
+    print_s [%sexp (p: program_state)];
+    [%expect {|
+      ((program ((Assign (x (Value (IntV 1)))))) (ip 0)
+       (variables ((x ((Value (IntV 1)))))))
+      |}]
+
+let%expect_test "eval_expr: eval two variables with both missing" =
+    let p = Interpreter.init_program_state [] in
+    Interpreter.interpret p;
+    let r1 = Eval.Eval_ex.eval_expr (Bin_Exp(Var_Ref "x", Add, Var_Ref "y")) p in
+    print_s [%sexp (r1: value)];
+    [%expect {|
+      (Exception
+        "NameError: name 'x' is not defined\
+       \nand\
+       \nNameError: name 'y' is not defined")
+      |}];
+    print_s [%sexp (p: program_state)];
+    [%expect {| ((program ()) (ip 0) (variables ())) |}]
+
+let%expect_test "eval_expr: use undeclared variable as function" =
+    let p = Interpreter.init_program_state [] in
+    Interpreter.interpret p;
+    let r1 = Eval.Eval_ex.eval_expr (Func_App ("x", [])) p in
+    print_s [%sexp (r1: value)];
+    [%expect {| (Exception "NameError: name 'x' is not defined") |}];
+    print_s [%sexp (p: program_state)];
+    [%expect {| ((program ()) (ip 0) (variables ())) |}]
+
+let%expect_test "eval_expr: use declared variable as function" =
+    let p = Interpreter.init_program_state [Assign("x", Value(IntV 1))] in
+    Interpreter.interpret p;
+    let r1 = Eval.Eval_ex.eval_expr (Func_App ("x", [])) p in
+    print_s [%sexp (r1: value)];
+    [%expect {| (Exception "EvalError: Variable x can not be evalueted with applying.") |}];
+    print_s [%sexp (p: program_state)];
+    [%expect {|
+      ((program ((Assign (x (Value (IntV 1)))))) (ip 0)
+       (variables ((x ((Value (IntV 1)))))))
+      |}]
+
+let%expect_test "eval_expr: eval multiple recursive variables" =
+    let lines = [Assign("y", Value(IntV 2)); Assign("x", Var_Ref("y"))] in 
+    let p = Interpreter.init_program_state lines in
+    Interpreter.interpret p;
+    let r1 = Eval.Eval_ex.eval_expr (Var_Ref "x") p in
+    print_s [%sexp (r1: value)];
+    [%expect {| (IntV 2) |}];
+    print_s [%sexp (p: program_state)];
+    [%expect {|
+      ((program ((Assign (y (Value (IntV 2)))) (Assign (x (Var_Ref y))))) (ip 0)
+       (variables ((x ((Value (IntV 2)))) (y ((Value (IntV 2)))))))
+      |}]
+
+let%expect_test "eval_expr: eval multiple recursive variables: missing" =
+    let lines = [Assign("x", Var_Ref("z")); Assign("y", Value(IntV 2))] in 
+    let p = Interpreter.init_program_state lines in
+    Interpreter.interpret p;
+    let r1 = Eval.Eval_ex.eval_expr (Var_Ref "x") p in
+    print_s [%sexp (r1: value)];
+    [%expect {| (Exception "NameError: name 'z' is not defined") |}];
+    print_s [%sexp (p: program_state)];
+    [%expect {|
+      ((program ((Assign (x (Var_Ref z))) (Assign (y (Value (IntV 2)))))) (ip 0)
+       (variables
+        ((x ((Value (Exception "NameError: name 'z' is not defined"))))
+         (y ((Value (IntV 2)))))))
+      |}]
+
+let%expect_test "eval_expr: eval circular variable assignment" =
+    let lines = [Assign("y", Value(IntV 2)); Assign("x", Var_Ref("y")); Assign("y", Var_Ref("x"))] in 
+    let p = Interpreter.init_program_state lines in
+    Interpreter.interpret p;
+    let r1 = Eval.Eval_ex.eval_expr (Var_Ref "y") p in
+    print_s [%sexp (r1: value)];
+    [%expect {| (IntV 2) |}];
+    print_s [%sexp (p: program_state)];
+    [%expect {|
+      ((program
+        ((Assign (y (Value (IntV 2)))) (Assign (x (Var_Ref y)))
+         (Assign (y (Var_Ref x)))))
+       (ip 0) (variables ((x ((Value (IntV 2)))) (y ((Value (IntV 2)))))))
+      |}]
+
+let%expect_test "eval_expr: eval self-referencing variable assignment" =
+    let lines = [Assign("x", Value(IntV 2)); Assign("x", Bin_Exp(Var_Ref("x"), Add, Value(IntV 1)))] in 
+    let p = Interpreter.init_program_state lines in
+    Interpreter.interpret p;
+    let r1 = Eval.Eval_ex.eval_expr (Var_Ref "x") p in
+    print_s [%sexp (r1: value)];
+    [%expect {| (IntV 3) |}];
+    print_s [%sexp (p: program_state)];
+    [%expect {|
+      ((program
+        ((Assign (x (Value (IntV 2))))
+         (Assign (x (Bin_Exp ((Var_Ref x) Add (Value (IntV 1))))))))
+       (ip 0)
+       (variables
+        ((x ((Value (IntV 3)) (Bin_Exp ((Value (IntV 2)) Add (Value (IntV 1)))))))))
+      |}]
