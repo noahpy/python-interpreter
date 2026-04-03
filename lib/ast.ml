@@ -63,7 +63,7 @@ and expr =
 and statement = 
     | Expr of expr
     | Assign of (string * expr)
-    | Func_Def of (string * expr)
+    | Func_Def of (string * func_unapp * func_oncall * func_offcall)
 [@@deriving sexp]
 
 (* Program state: Used to keep track of variables (including functions) and current position. *)

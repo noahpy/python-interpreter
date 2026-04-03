@@ -34,7 +34,7 @@ and eval_var (name: string) (state: program_state) : value =
         match var with 
           | Value(v) -> v
           | _ -> let res = eval_expr var state 
-                 in Hashtbl.add_multi state.variables ~key:name ~data:(Value(res)); res
+                 in Hash_utils.replace_variable state name (Value(res)); res
     in match Hash_utils.get_variable state name with
       | Some(v) -> handle_variable v
       | None -> Exception (String.concat ["NameError: name '";name;"' is not defined"])

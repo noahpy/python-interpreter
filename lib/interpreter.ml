@@ -31,7 +31,7 @@ let rec interpret (prog:program_state) : unit =
         match stat with
           | Expr(exp) -> Eval_ex.eval_expr_top exp prog
           | Assign(name, exp) -> assign_var name exp prog
-          | Func_Def(name, exp) -> print_endline "Function definition not implemented!"
+          | Func_Def(name, f_on, f, f_off) -> Hash_utils.add_variable prog name (Value(Function(f_on, f, f_off)))
     in match prog.program with
       | [] -> ()
       | h::r -> interpret_helper h prog; interpret {prog with program=r; ip=prog.ip+1}

@@ -194,7 +194,5 @@ let%expect_test "eval_expr: eval self-referencing variable assignment" =
       ((program
         ((Assign (x (Value (IntV 2))))
          (Assign (x (Bin_Exp ((Var_Ref x) Add (Value (IntV 1))))))))
-       (ip 0)
-       (variables
-        ((x ((Value (IntV 3)) (Bin_Exp ((Value (IntV 2)) Add (Value (IntV 1)))))))))
+       (ip 0) (variables ((x ((Value (IntV 3)))))))
       |}]

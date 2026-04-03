@@ -2,6 +2,9 @@
 open Base
 open Ast
 
+let add_variable (prog: program_state) (name: string) (value: expr) : unit =
+    Hashtbl.add_multi prog.variables ~key:name ~data:value
+
 let get_variable (prog: program_state) (name: string) : expr option =
      Hashtbl.find_multi prog.variables name |> List.hd
 
