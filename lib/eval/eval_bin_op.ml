@@ -22,6 +22,11 @@ let implicit_casting (val1: value) (val2: value) : (value * value) =
       | (BoolV x1, StringV x2) -> (StringV (Bool.to_string x1), StringV x2)
       | (StringV x1, BoolV x2) -> (StringV x1, StringV (Bool.to_string x2))
       | (BoolV x1, BoolV x2) -> (BoolV x1, BoolV x2)
+      | (ListV x1, ListV x2) -> (ListV x1, ListV x2)
+      | (ListV x1, IntV x2) -> (ListV x1, IntV x2)
+      | (IntV x1, ListV x2) -> (IntV x1, ListV x2)
+      | (ListV x1, BoolV x2) -> (ListV x1, IntV (if x2 then 1 else 0))
+      | (BoolV x1, ListV x2) -> (IntV (if x1 then 1 else 0), ListV x2)
       (* Pass on exceptions *)
       | (Exception e1, x) -> (Exception e1, x)
       | (x, Exception e2) -> (x, Exception e2)
@@ -82,3 +87,20 @@ let eval_bool_op (x1: bool) (op: bin_op) (x2: bool) : value =
       | Equal -> BoolV Bool.(x1 = x2)
       | Neq -> BoolV Bool.(x1 <> x2)
       | _ -> Exception "Operation not supported for type bool"
+
+
+let eval_list_op (x1: value list) (op: bin_op) (x2: value): value = 
+    match x2 with
+      | ListV l -> (
+          match op with
+            | Add -> ListV (x1 @ l)
+            | _ -> Exception "Operation not supported for type list"
+          )
+      | IntV x -> (
+          match op with
+            | Mul -> ListV (List.concat (List.init x ~f:(fun _ -> x1)))
+            | _ -> Exception "Operation not supported for type list"
+          )
+      | _ -> Exception "Operation not supported for type list"
+
+            

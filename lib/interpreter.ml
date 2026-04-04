@@ -25,6 +25,7 @@ let rec interpret (prog:program_state) : unit =
                               )
               | Bin_Exp(x1, op, x2) -> Bin_Exp(remove_self_ref x1, op, remove_self_ref x2)
               | Func_App(x, args) -> Func_App(x, List.map args ~f:remove_self_ref)
+              | ListE(x) -> ListE(List.map x ~f:remove_self_ref)
         in let cleaned_exp = remove_self_ref exp
         in Hash_utils.replace_variable prog name cleaned_exp
     in let interpret_helper (stat: statement) (prog:program_state) : unit = 

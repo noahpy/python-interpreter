@@ -12,6 +12,7 @@ let rec eval_expr (ex: expr) (state: program_state): value =
       | Bin_Exp(ex1, op, ex2) -> eval_bin_op ex1 op ex2 state
       | Var_Ref(name) -> eval_var name state
       | Func_App(name, expressions) -> eval_func_app name expressions state
+      | ListE(expressions) -> eval_list expressions state
       (* | _ -> Exception "Not implemented yet." *)
 
 and eval_bin_op (ex1: expr) (op: bin_op) (ex2: expr) (state: program_state) : value =
@@ -22,6 +23,8 @@ and eval_bin_op (ex1: expr) (op: bin_op) (ex2: expr) (state: program_state) : va
       | (FloatV x1, FloatV x2) -> Eval_bin_op.eval_float_op x1 op x2
       | (StringV x1, StringV x2) -> Eval_bin_op.eval_string_op x1 op x2
       | (BoolV x1, BoolV x2) -> Eval_bin_op.eval_bool_op x1 op x2
+      | (ListV x1, v2) -> Eval_bin_op.eval_list_op x1 op v2
+      | (v1, ListV x2) -> Eval_bin_op.eval_list_op x2 op v1
       | (Exception e1, Exception e2) -> Exception (e1 ^ "\nand\n" ^ e2)
       | (Exception e1, _) -> Exception(e1)
       | (_, Exception e2) -> Exception(e2)
@@ -65,7 +68,7 @@ and eval_func_app (name: string) (expressions: expr list) (state: program_state)
       | None -> Exception (String.concat ["NameError: name '";name;"' is not defined"])
 
 
-let eval_expr_top ?(print_values:bool=false) (ex: expr) (state: program_state) : unit = 
+and eval_expr_top ?(print_values:bool=false) (ex: expr) (state: program_state) : unit = 
     (* Top-level evaluation function. Handles Exceptions if they come up. *)
     match eval_expr ex state with
       | Exception(e) -> print_endline "";
@@ -73,4 +76,20 @@ let eval_expr_top ?(print_values:bool=false) (ex: expr) (state: program_state) :
                         print_endline e; 
                         raise (Failure "Program failed.")
       | x -> if print_values then value_to_output x else ()
+
+and eval_list (exs: expr list) (state: program_state) : value = 
+    (* Evaluate a list of expressions into a list of values. 
+       Pass up Exceptions if they come up.*)
+    let tmp_res = List.map exs ~f:(fun x -> eval_expr x state)
+    in let reduce_if_exception (acc: (value list, string) Result.t) (x: value) : (value list, string) Result.t =
+        match (acc, x) with
+          | Ok(a), Exception(e) -> Error(e)
+          | Ok(a), x -> Ok(a @ [x])
+          | Error(e), Exception(e2) -> Error(String.concat ~sep:"\nand\n" [e; e2])
+          | Error(e), _ -> Error(e)
+    in match List.fold tmp_res ~init:(Ok []) ~f:reduce_if_exception with
+      | Ok(x) -> ListV x
+      | Error(e) -> Exception e
+
+
 

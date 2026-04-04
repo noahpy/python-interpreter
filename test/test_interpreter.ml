@@ -71,3 +71,30 @@ let%expect_test "interpret print after defining custom add function with overlap
          (print ((Value (Function (<opaque> <opaque> <opaque>)))))
          (res ((Value (IntV 3)))) (x ((Value (IntV 2)))) (y ((Value (IntV 1)))))))
       |}]
+
+let%expect_test "interpret print of list arithmetic" = 
+    let line1 = Assign("x", ListE([Value(StringV "hello"); Value(StringV "world")])) in
+    let line2 = Assign("y", Value(IntV 2)) in
+    let line3 = Assign("z", Value(ListV([IntV 2; IntV 3]))) in
+    let line4 = Expr(Func_App("print", [Bin_Exp(Var_Ref("z"), Add, (Bin_Exp(Var_Ref("x"), Mul, Var_Ref("y"))))])) in
+    let p = Interpreter.init_program_state [line1; line2; line3; line4] in
+    Python_interpreter.Python_stdlib.Io.load_impls p;
+    interpret p;
+    [%expect {| [2, 3, hello, world, hello, world] |}];
+    print_s [%sexp (p: program_state)];
+    [%expect {|
+      ((program
+        ((Assign (x (ListE ((Value (StringV hello)) (Value (StringV world))))))
+         (Assign (y (Value (IntV 2))))
+         (Assign (z (Value (ListV ((IntV 2) (IntV 3))))))
+         (Expr
+          (Func_App
+           (print
+            ((Bin_Exp ((Var_Ref z) Add (Bin_Exp ((Var_Ref x) Mul (Var_Ref y)))))))))))
+       (ip 0)
+       (variables
+        ((input ((Value (Function (<opaque> <opaque> <opaque>)))))
+         (print ((Value (Function (<opaque> <opaque> <opaque>)))))
+         (x ((Value (ListV ((StringV hello) (StringV world))))))
+         (y ((Value (IntV 2)))) (z ((Value (ListV ((IntV 2) (IntV 3)))))))))
+      |}]

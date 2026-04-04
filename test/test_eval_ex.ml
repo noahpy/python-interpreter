@@ -55,6 +55,14 @@ let%expect_test "eval_expr: eval Ntwo value" =
     print_s [%sexp (p: program_state)];
     [%expect {| ((program ()) (ip 0) (variables ())) |}]
 
+let%expect_test "eval_expr: eval list value" =
+    let p = Interpreter.init_program_state [] in
+    let r1 = Eval.Eval_ex.eval_expr (Value(ListV [IntV 1; FloatV 12.5; StringV "Hello World"])) p in
+    print_s [%sexp (r1: value)];
+    [%expect {| (ListV ((IntV 1) (FloatV 12.5) (StringV "Hello World"))) |}];
+    print_s [%sexp (p: program_state)];
+    [%expect {| ((program ()) (ip 0) (variables ())) |}]
+
 
 (* Variable evaluation *)
 
@@ -195,4 +203,86 @@ let%expect_test "eval_expr: eval self-referencing variable assignment" =
         ((Assign (x (Value (IntV 2))))
          (Assign (x (Bin_Exp ((Var_Ref x) Add (Value (IntV 1))))))))
        (ip 0) (variables ((x ((Value (IntV 3)))))))
+      |}]
+
+(* List evaluation *)
+
+let%expect_test "eval_expr: evaluate list with expressions" =
+    let p = Interpreter.init_program_state [] in
+    let r1 = Eval.Eval_ex.eval_expr (ListE([Value(IntV 1); Bin_Exp(Value(IntV 2), Add, Value(IntV 1))])) p in
+    print_s [%sexp (r1: value)];
+    [%expect {| (ListV ((IntV 1) (IntV 3))) |}];
+    print_s [%sexp (p: program_state)];
+    [%expect {| ((program ()) (ip 0) (variables ())) |}]
+
+let%expect_test "eval_expr: evaluate list with expressions (with variables)" =
+    let p = Interpreter.init_program_state [Assign("x", Value(IntV 2))] in
+    Interpreter.interpret p;
+    let r1 = Eval.Eval_ex.eval_expr (ListE([Value(IntV 1); Bin_Exp(Var_Ref("x"), Add, Value(IntV 1))])) p in
+    print_s [%sexp (r1: value)];
+    [%expect {| (ListV ((IntV 1) (IntV 3))) |}];
+    print_s [%sexp (p: program_state)];
+    [%expect {|
+      ((program ((Assign (x (Value (IntV 2)))))) (ip 0)
+       (variables ((x ((Value (IntV 2)))))))
+      |}]
+
+let%expect_test "eval_expr: evaluate recursing list" =
+    let p = Interpreter.init_program_state [Assign("x", Value(IntV 2))] in
+    Interpreter.interpret p;
+    let r1 = Eval.Eval_ex.eval_expr (ListE([ListE([Value(IntV 1); Bin_Exp(Var_Ref("x"), Mul, ListE([Value(StringV "hello")]))]); (Value(FloatV 3.14))])) p in
+    print_s [%sexp (r1: value)];
+    [%expect {|
+      (ListV
+       ((ListV ((IntV 1) (ListV ((StringV hello) (StringV hello))))) (FloatV 3.14)))
+      |}];
+    print_s [%sexp (p: program_state)];
+    [%expect {|
+      ((program ((Assign (x (Value (IntV 2)))))) (ip 0)
+       (variables ((x ((Value (IntV 2)))))))
+      |}]
+
+let%expect_test "eval_expr: evaluate list in variable" =
+    let line2 = Assign("l", (ListE([ListE([Value(IntV 1); Bin_Exp(Var_Ref("x"), Mul, ListE([Value(StringV "hello")]))]); (Value(FloatV 3.14))]))) in
+    let p = Interpreter.init_program_state [Assign("x", Value(IntV 2)); line2] in
+    Interpreter.interpret p;
+    print_s [%sexp (p: program_state)];
+    [%expect {|
+      ((program
+        ((Assign (x (Value (IntV 2))))
+         (Assign
+          (l
+           (ListE
+            ((ListE
+              ((Value (IntV 1))
+               (Bin_Exp ((Var_Ref x) Mul (ListE ((Value (StringV hello))))))))
+             (Value (FloatV 3.14))))))))
+       (ip 0)
+       (variables
+        ((l
+          ((ListE
+            ((ListE
+              ((Value (IntV 1))
+               (Bin_Exp ((Value (IntV 2)) Mul (ListE ((Value (StringV hello))))))))
+             (Value (FloatV 3.14))))))
+         (x ((Value (IntV 2)))))))
+      |}];
+    let r1 = Eval.Eval_ex.eval_expr (Var_Ref("l")) p in
+    print_s [%sexp (r1: value)];
+    [%expect {|
+      (ListV
+       ((ListV ((IntV 1) (ListV ((StringV hello) (StringV hello))))) (FloatV 3.14)))
+      |}];
+    let p2 = {p with program = [Expr(Var_Ref("l"))]} in
+    Interpreter.interpret p2;
+    print_s [%sexp (p2: program_state)];
+    [%expect {|
+      ((program ((Expr (Var_Ref l)))) (ip 0)
+       (variables
+        ((l
+          ((Value
+            (ListV
+             ((ListV ((IntV 1) (ListV ((StringV hello) (StringV hello)))))
+              (FloatV 3.14))))))
+         (x ((Value (IntV 2)))))))
       |}]
