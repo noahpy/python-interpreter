@@ -21,7 +21,7 @@ type func_unapp = program_state -> value [@sexp.opaque]
 (* Function wrapper: Called before applying the function. 
    It overwrites the state according to local definitions and the given
    argument values. It should also check for argument count and other invalidities. *)
-and func_oncall = expr list -> program_state -> (unit, string) Result.t [@sexp.opaque]
+and func_oncall = value list -> program_state -> (unit, string) Result.t [@sexp.opaque]
 
 (* Function wrapper: Called after applying the function.
    Destructs all local definitions. *)
@@ -32,7 +32,7 @@ and value =
     | FloatV of float
     | StringV of string
     | BoolV of bool
-    | ListV of expr list
+    | ListV of value list
     | Ntwo
     | Exception of string
     | Function of (func_unapp * func_oncall * func_offcall)
@@ -85,7 +85,7 @@ let rec value_to_output (val_x: value) : unit =
       | Exception x -> print_endline x
       | Ntwo -> print_endline "None"
       | Function f -> print_endline "Function"
-      | ListV x -> printf "[%s]\n" (String.concat ~sep:", " (List.map x ~f:expr_to_str))
+      | ListV x -> printf "[%s]\n" (String.concat ~sep:", " (List.map x ~f:value_to_str))
 
 and value_to_str (val_x: value) : string = 
     match val_x with
@@ -96,7 +96,7 @@ and value_to_str (val_x: value) : string =
       | Exception x -> x
       | Ntwo -> "None"
       | Function f -> "Function"
-      | ListV x -> "[" ^ String.concat ~sep:", " (List.map x ~f:expr_to_str) ^ "]"
+      | ListV x -> "[" ^ String.concat ~sep:", " (List.map x ~f:value_to_str) ^ "]"
 
 and expr_to_str (exp: expr) : string =
     let bin_op_to_str (op: bin_op) : string =

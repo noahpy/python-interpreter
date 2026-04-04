@@ -41,15 +41,15 @@ and eval_var (name: string) (state: program_state) : value =
 
 and eval_func_app (name: string) (expressions: expr list) (state: program_state) : value =
     (* Top-level evaluation function for function applications. *)
-    let rec eval_arguments (arguments: expr list) : expr list = 
+    let rec eval_arguments (arguments: expr list) : value list = 
         (* Evaluate a list of expressions into a list of values.*)
         match arguments with
           | [] -> []
-          | h::r -> Value(eval_expr h state) :: (eval_arguments r) 
+          | h::r -> (eval_expr h state) :: (eval_arguments r) 
     in let handle_variable (var: expr) : value =
         (* Determine if a variable is a function and apply it.*)
         let call_function (f: func_unapp) (f_on: func_oncall) 
-                          (f_off: func_offcall) (args: expr list) (state: program_state) : value =
+                          (f_off: func_offcall) (args: value list) (state: program_state) : value =
             match f_on args state with
               | Ok() -> let res = f state in   
                         (match f_off state with

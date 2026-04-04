@@ -38,8 +38,8 @@ let%expect_test "interpret print after self-referencing variable assignment" =
 
 let%expect_test "interpret print after defining custom add function with overlapping local variable names" =
     let f_on args state =
-        Utils.Hash_utils.add_variable state "x" (List.nth_exn args 0);
-        Utils.Hash_utils.add_variable state "y" (List.nth_exn args 1);
+        Utils.Hash_utils.add_variable state "x" (Value(List.nth_exn args 0));
+        Utils.Hash_utils.add_variable state "y" (Value(List.nth_exn args 1));
         Ok()
     in let f state =
         Eval.eval_expr (Bin_Exp(Var_Ref("x"), Add, Var_Ref("y"))) state

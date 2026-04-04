@@ -12,15 +12,11 @@ module Print_impl = struct
 
     let f (state: program_state) : value = 
         (* Implementation of python print function.*)
-        let print_helpler (v: expr) : (string, string) Result.t =
-            match v with
-              | Value x -> Ok(value_to_str x)
-              | _ -> Error("TypeError: print only accepts values!")
-        in let rec assemble_strings (args: expr list) : (string, string) Result.t = 
+        let rec assemble_strings (args: value list) : (string, string) Result.t = 
             match args with
               | [] -> Ok("")
               | h::r -> let res = assemble_strings r in
-                        let h_res = print_helpler h in
+                        let h_res = Ok(value_to_str h) in
                         match (h_res, res) with
                           | (Ok(x1), Ok(x2)) -> Ok(x1^" "^x2)
                           | (Error(x1), Error(x2)) -> Error(x1^"\nand\n"^x2)
@@ -48,7 +44,7 @@ module Input_impl = struct
         (* Implementation of python input function.*)
         let args_exp = Hash_utils.get_variable state "__args"
         in match args_exp with
-          | Some(Value(ListV(args))) -> Out_channel.output_string stdout (exprs_to_str args);
+          | Some(Value(ListV(args))) -> Out_channel.output_string stdout (values_to_str args);
                                         Out_channel.flush stdout;
                                         (match In_channel.input_line stdin with
                                           | Some(x) -> StringV(x)
