@@ -1,7 +1,6 @@
 
 open Base
 module Interpret = Python_interpreter.Interpreter
-module Eval = Python_interpreter.Eval.Eval_ex
 open Python_interpreter.Ast
 open Python_interpreter.Utils
 
@@ -11,8 +10,8 @@ let () =
         Hash_utils.add_variable state "x" (Value(List.nth_exn args 0));
         Hash_utils.add_variable state "y" (Value(List.nth_exn args 1));
         Ok()
-    in let f state =
-        Eval.eval_expr (Bin_Exp(Var_Ref("x"), Add, Var_Ref("y"))) state
+    in let f =
+        Func_Stat [Return (Bin_Exp(Var_Ref("x"), Add, Var_Ref("y")))]
     in let f_off state =
         Hash_utils.remove_variable state "x";
         Hash_utils.remove_variable state "y";
@@ -24,5 +23,5 @@ let () =
     let line5 = Expr(Func_App("print", [Var_Ref("res"); Var_Ref("x"); Var_Ref("y")])) in
     let lines = [line1; line2; line3; line4; line5] in 
     let p = Interpret.init_program_state ~load_stdlib:true lines in
-    Interpret.interpret p
+    Interpret.interpret_top p
 

@@ -58,5 +58,5 @@ end
 
 let load_impls (state: program_state) : unit = 
     (* Load standard library functions implemented in this module. *)
-    Hashtbl.add_multi state.variables ~key:"print" ~data:(Value(Function(Print_impl.f, Print_impl.f_on, Print_impl.f_off)));
-    Hashtbl.add_multi state.variables ~key:"input" ~data:(Value(Function(Input_impl.f, Input_impl.f_on, Input_impl.f_off)));
+    Utils.Hash_utils.add_variable state "print" (Value(Function(Func_Opq(Print_impl.f), Print_impl.f_on, Print_impl.f_off)));
+    Utils.Hash_utils.add_variable state "input" (Value(Function(Func_Opq(Input_impl.f), Input_impl.f_on, Input_impl.f_off)));
