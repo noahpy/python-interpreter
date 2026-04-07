@@ -1,3 +1,11 @@
+
+; Tell dune that parser.mly should be processed by menhir
+(menhir
+ (modules parser))
+
+; Tell dune that lexer.mll should be processed by ocamllex
+(ocamllex lexer)
+
 (include_subdirs qualified)
 
 (library

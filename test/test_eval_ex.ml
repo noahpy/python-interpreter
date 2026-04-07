@@ -68,7 +68,7 @@ let%expect_test "eval_expr: eval list value" =
 
 let%expect_test "eval_expr: eval undeclared variable" =
     let p = Interpreter.init_program_state [] in
-    Interpreter.interpret_top p;
+    Interpreter.interpret_ir p;
     let r1 = Eval.Eval_ex.eval_expr (Var_Ref "x") p in
     print_s [%sexp (r1: value)];
     [%expect {| (Exception "NameError: name 'x' is not defined") |}];
@@ -77,7 +77,7 @@ let%expect_test "eval_expr: eval undeclared variable" =
 
 let%expect_test "eval_expr: eval single variable" =
     let p = Interpreter.init_program_state [Assign("x", Value(IntV 1))] in
-    Interpreter.interpret_top p;
+    Interpreter.interpret_ir p;
     let r1 = Eval.Eval_ex.eval_expr (Var_Ref "x") p in
     print_s [%sexp (r1: value)];
     [%expect {| (IntV 1) |}];
@@ -90,7 +90,7 @@ let%expect_test "eval_expr: eval single variable" =
 let%expect_test "eval_expr: eval multiple variable" =
     let lines = [Assign("x", Value(IntV 1)); Assign("y", Value(IntV 2))] in 
     let p = Interpreter.init_program_state lines in
-    Interpreter.interpret_top p;
+    Interpreter.interpret_ir p;
     let r1 = Eval.Eval_ex.eval_expr (Bin_Exp(Var_Ref "x", Add, Var_Ref "y")) p in
     print_s [%sexp (r1: value)];
     [%expect {| (IntV 3) |}];
@@ -102,7 +102,7 @@ let%expect_test "eval_expr: eval multiple variable" =
 
 let%expect_test "eval_expr: eval two variables with one missing" =
     let p = Interpreter.init_program_state [Assign("x", Value(IntV 1))] in
-    Interpreter.interpret_top p;
+    Interpreter.interpret_ir p;
     let r1 = Eval.Eval_ex.eval_expr (Bin_Exp(Var_Ref "x", Add, Var_Ref "y")) p in
     print_s [%sexp (r1: value)];
     [%expect {| (Exception "NameError: name 'y' is not defined") |}];
@@ -114,7 +114,7 @@ let%expect_test "eval_expr: eval two variables with one missing" =
 
 let%expect_test "eval_expr: eval two variables with both missing" =
     let p = Interpreter.init_program_state [] in
-    Interpreter.interpret_top p;
+    Interpreter.interpret_ir p;
     let r1 = Eval.Eval_ex.eval_expr (Bin_Exp(Var_Ref "x", Add, Var_Ref "y")) p in
     print_s [%sexp (r1: value)];
     [%expect {|
@@ -128,7 +128,7 @@ let%expect_test "eval_expr: eval two variables with both missing" =
 
 let%expect_test "eval_expr: use undeclared variable as function" =
     let p = Interpreter.init_program_state [] in
-    Interpreter.interpret_top p;
+    Interpreter.interpret_ir p;
     let r1 = Eval.Eval_ex.eval_expr (Func_App ("x", [])) p in
     print_s [%sexp (r1: value)];
     [%expect {| (Exception "NameError: name 'x' is not defined") |}];
@@ -137,7 +137,7 @@ let%expect_test "eval_expr: use undeclared variable as function" =
 
 let%expect_test "eval_expr: use declared variable as function" =
     let p = Interpreter.init_program_state [Assign("x", Value(IntV 1))] in
-    Interpreter.interpret_top p;
+    Interpreter.interpret_ir p;
     let r1 = Eval.Eval_ex.eval_expr (Func_App ("x", [])) p in
     print_s [%sexp (r1: value)];
     [%expect {| (Exception "EvalError: Variable x can not be evalueted with applying.") |}];
@@ -150,7 +150,7 @@ let%expect_test "eval_expr: use declared variable as function" =
 let%expect_test "eval_expr: eval multiple recursive variables" =
     let lines = [Assign("y", Value(IntV 2)); Assign("x", Var_Ref("y"))] in 
     let p = Interpreter.init_program_state lines in
-    Interpreter.interpret_top p;
+    Interpreter.interpret_ir p;
     let r1 = Eval.Eval_ex.eval_expr (Var_Ref "x") p in
     print_s [%sexp (r1: value)];
     [%expect {| (IntV 2) |}];
@@ -163,7 +163,7 @@ let%expect_test "eval_expr: eval multiple recursive variables" =
 let%expect_test "eval_expr: eval multiple recursive variables: missing" =
     let lines = [Assign("x", Var_Ref("z")); Assign("y", Value(IntV 2))] in 
     let p = Interpreter.init_program_state lines in
-    Interpreter.interpret_top p;
+    Interpreter.interpret_ir p;
     let r1 = Eval.Eval_ex.eval_expr (Var_Ref "x") p in
     print_s [%sexp (r1: value)];
     [%expect {| (Exception "NameError: name 'z' is not defined") |}];
@@ -178,7 +178,7 @@ let%expect_test "eval_expr: eval multiple recursive variables: missing" =
 let%expect_test "eval_expr: eval circular variable assignment" =
     let lines = [Assign("y", Value(IntV 2)); Assign("x", Var_Ref("y")); Assign("y", Var_Ref("x"))] in 
     let p = Interpreter.init_program_state lines in
-    Interpreter.interpret_top p;
+    Interpreter.interpret_ir p;
     let r1 = Eval.Eval_ex.eval_expr (Var_Ref "y") p in
     print_s [%sexp (r1: value)];
     [%expect {| (IntV 2) |}];
@@ -193,7 +193,7 @@ let%expect_test "eval_expr: eval circular variable assignment" =
 let%expect_test "eval_expr: eval self-referencing variable assignment" =
     let lines = [Assign("x", Value(IntV 2)); Assign("x", Bin_Exp(Var_Ref("x"), Add, Value(IntV 1)))] in 
     let p = Interpreter.init_program_state lines in
-    Interpreter.interpret_top p;
+    Interpreter.interpret_ir p;
     let r1 = Eval.Eval_ex.eval_expr (Var_Ref "x") p in
     print_s [%sexp (r1: value)];
     [%expect {| (IntV 3) |}];
@@ -217,7 +217,7 @@ let%expect_test "eval_expr: evaluate list with expressions" =
 
 let%expect_test "eval_expr: evaluate list with expressions (with variables)" =
     let p = Interpreter.init_program_state [Assign("x", Value(IntV 2))] in
-    Interpreter.interpret_top p;
+    Interpreter.interpret_ir p;
     let r1 = Eval.Eval_ex.eval_expr (ListE([Value(IntV 1); Bin_Exp(Var_Ref("x"), Add, Value(IntV 1))])) p in
     print_s [%sexp (r1: value)];
     [%expect {| (ListV ((IntV 1) (IntV 3))) |}];
@@ -229,7 +229,7 @@ let%expect_test "eval_expr: evaluate list with expressions (with variables)" =
 
 let%expect_test "eval_expr: evaluate recursing list" =
     let p = Interpreter.init_program_state [Assign("x", Value(IntV 2))] in
-    Interpreter.interpret_top p;
+    Interpreter.interpret_ir p;
     let r1 = Eval.Eval_ex.eval_expr (ListE([ListE([Value(IntV 1); Bin_Exp(Var_Ref("x"), Mul, ListE([Value(StringV "hello")]))]); (Value(FloatV 3.14))])) p in
     print_s [%sexp (r1: value)];
     [%expect {|
@@ -245,7 +245,7 @@ let%expect_test "eval_expr: evaluate recursing list" =
 let%expect_test "eval_expr: evaluate list in variable" =
     let line2 = Assign("l", (ListE([ListE([Value(IntV 1); Bin_Exp(Var_Ref("x"), Mul, ListE([Value(StringV "hello")]))]); (Value(FloatV 3.14))]))) in
     let p = Interpreter.init_program_state [Assign("x", Value(IntV 2)); line2] in
-    Interpreter.interpret_top p;
+    Interpreter.interpret_ir p;
     print_s [%sexp (p: program_state)];
     [%expect {|
       ((program
@@ -274,7 +274,7 @@ let%expect_test "eval_expr: evaluate list in variable" =
        ((ListV ((IntV 1) (ListV ((StringV hello) (StringV hello))))) (FloatV 3.14)))
       |}];
     let p2 = {p with program = [Expr(Var_Ref("l"))]} in
-    Interpreter.interpret_top p2;
+    Interpreter.interpret_ir p2;
     print_s [%sexp (p2: program_state)];
     [%expect {|
       ((program ((Expr (Var_Ref l)))) (ip 0)

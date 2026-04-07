@@ -9,6 +9,8 @@
 
 (authors "Noah Schlenker")
 
+(using menhir 3.0)
+
 (package
  (name python-interpreter)
  (synopsis "A python intepreter in OCaml")

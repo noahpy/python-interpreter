@@ -54,7 +54,7 @@ and eval_func_app (name: string) (expressions: expr list) (state: program_state)
                           (f_off: func_offcall) (args: value list) (state: program_state) : value =
             let get_res () : value = match f with
                             | Func_Opq(f_op) -> f_op state
-                            | Func_Stat(statements) -> interpret {state with program = statements} 
+                            | Func_Stat(statements) -> eval_program {state with program = statements} 
             in match f_on args state with
               | Ok() -> let res = get_res () in   
                         (match f_off state with
@@ -84,7 +84,7 @@ and eval_list (exs: expr list) (state: program_state) : value =
       | Error(e) -> Exception e
 
 
-and interpret (prog:program_state) : value = 
+and eval_program (prog:program_state) : value = 
     (* Interpret program and return value, if such is returned, else Ntwo. *)
     let assign_var (name: string) (exp: expr) (prog: program_state) : unit =
     (* Handle variable assignment *)
@@ -112,7 +112,7 @@ and interpret (prog:program_state) : value =
       | [] -> Ntwo
       | h::r -> (
           match interpret_helper h prog with
-            | None -> interpret {prog with program=r; ip=prog.ip+1}
+            | None -> eval_program {prog with program=r; ip=prog.ip+1}
             | Some(v) -> v
         )
 

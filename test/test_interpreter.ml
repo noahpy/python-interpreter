@@ -13,7 +13,7 @@ let%expect_test "interpret print after self-referencing variable assignment" =
     let line4 = Expr(Func_App("print", [Value(IntV 10); Var_Ref("x")])) in
     let p = Interpreter.init_program_state [line1; line2; line3; line4] in
     Python_interpreter.Python_stdlib.Io.load_impls p;
-    interpret_top p;
+    interpret_ir p;
     [%expect {| 10 1.6666666666666667 |}];
     print_s [%sexp (p: program_state)];
     [%expect {|
@@ -55,7 +55,7 @@ let%expect_test "interpret print after defining custom add function with overlap
     let lines = [line1; line2; line3; line4; line5] in 
     let p = init_program_state lines in
     Python_interpreter.Python_stdlib.Io.load_impls p;
-    interpret_top p;
+    interpret_ir p;
     [%expect {| 3 2 1 |}];
     print_s [%sexp (p: program_state)];
     [%expect {|
@@ -85,7 +85,7 @@ let%expect_test "interpret print of list arithmetic" =
     let line4 = Expr(Func_App("print", [Bin_Exp(Var_Ref("z"), Add, (Bin_Exp(Var_Ref("x"), Mul, Var_Ref("y"))))])) in
     let p = Interpreter.init_program_state [line1; line2; line3; line4] in
     Python_interpreter.Python_stdlib.Io.load_impls p;
-    interpret_top p;
+    interpret_ir p;
     [%expect {| [2, 3, hello, world, hello, world] |}];
     print_s [%sexp (p: program_state)];
     [%expect {|
@@ -127,7 +127,7 @@ let%expect_test "interpret print after defining custom function with multiple st
     let lines = [line1; line2; line3; line4; line5] in 
     let p = init_program_state lines in
     Python_interpreter.Python_stdlib.Io.load_impls p;
-    interpret_top p;
+    interpret_ir p;
     [%expect {| 5 2 1 |}];
     print_s [%sexp (p: program_state)];
     [%expect {|
