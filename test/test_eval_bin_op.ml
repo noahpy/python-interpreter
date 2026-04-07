@@ -422,7 +422,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables()))
       -----------------------
       Input: (StringV abc) Add (BoolV true)
-      Result: (StringV abctrue)
+      Result: (StringV abcTrue)
       State: ((program())(ip 0)(variables()))
       -----------------------
       Input: (StringV abc) Add Ntwo
@@ -442,7 +442,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables()))
       -----------------------
       Input: (BoolV true) Add (StringV abc)
-      Result: (StringV trueabc)
+      Result: (StringV Trueabc)
       State: ((program())(ip 0)(variables()))
       -----------------------
       Input: (BoolV true) Add Ntwo
@@ -1142,7 +1142,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables()))
       -----------------------
       Input: (StringV abc) Less (BoolV true)
-      Result: (BoolV true)
+      Result: (BoolV false)
       State: ((program())(ip 0)(variables()))
       -----------------------
       Input: (StringV abc) Less Ntwo
@@ -1162,7 +1162,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables()))
       -----------------------
       Input: (BoolV true) Less (StringV abc)
-      Result: (BoolV false)
+      Result: (BoolV true)
       State: ((program())(ip 0)(variables()))
       -----------------------
       Input: (BoolV true) Less Ntwo
@@ -1262,7 +1262,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables()))
       -----------------------
       Input: (StringV abc) Greater (BoolV true)
-      Result: (BoolV false)
+      Result: (BoolV true)
       State: ((program())(ip 0)(variables()))
       -----------------------
       Input: (StringV abc) Greater Ntwo
@@ -1282,7 +1282,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables()))
       -----------------------
       Input: (BoolV true) Greater (StringV abc)
-      Result: (BoolV true)
+      Result: (BoolV false)
       State: ((program())(ip 0)(variables()))
       -----------------------
       Input: (BoolV true) Greater Ntwo
@@ -1382,7 +1382,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables()))
       -----------------------
       Input: (StringV abc) Leq (BoolV true)
-      Result: (BoolV true)
+      Result: (BoolV false)
       State: ((program())(ip 0)(variables()))
       -----------------------
       Input: (StringV abc) Leq Ntwo
@@ -1402,7 +1402,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables()))
       -----------------------
       Input: (BoolV true) Leq (StringV abc)
-      Result: (BoolV false)
+      Result: (BoolV true)
       State: ((program())(ip 0)(variables()))
       -----------------------
       Input: (BoolV true) Leq Ntwo
@@ -1502,7 +1502,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables()))
       -----------------------
       Input: (StringV abc) Geq (BoolV true)
-      Result: (BoolV false)
+      Result: (BoolV true)
       State: ((program())(ip 0)(variables()))
       -----------------------
       Input: (StringV abc) Geq Ntwo
@@ -1522,7 +1522,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables()))
       -----------------------
       Input: (BoolV true) Geq (StringV abc)
-      Result: (BoolV true)
+      Result: (BoolV false)
       State: ((program())(ip 0)(variables()))
       -----------------------
       Input: (BoolV true) Geq Ntwo
