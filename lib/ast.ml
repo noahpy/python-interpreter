@@ -57,6 +57,7 @@ and bin_op =
     | Geq
     | Equal
     | Neq
+    | Mod
 [@@deriving sexp]
 
 and expr = 
@@ -67,18 +68,28 @@ and expr =
     | ListE of expr list
 [@@deriving sexp]
 
-and statement = 
+and statement =
     | Expr of expr
     | Assign of (string * expr)
     | Return of expr
     | Func_Def of (string * func_unapp * func_oncall * func_offcall)
+    | If of (expr * statement list * statement list)
+    | While of (expr * statement list)
+    | For of (string * expr * statement list)
+    | FunDef of (string * string list * statement list)
+    | Pass
 [@@deriving sexp]
 
 (* Program state: Used to keep track of variables (including functions) and current position. *)
 and program_state = {
+    (* Current program. *)
     program: statement list;
+    (* Current position in the program. *)
     ip: int;
+    (* Pair an indentifier to a history of expressions. *)
     variables: expr list Hashtbl.M(String).t;
+    (* Track local variable assignments, such that they can be destructed later. *)
+    local_variables: bool Hashtbl.M(String).t; 
 }
 [@@deriving sexp]
 
@@ -121,6 +132,7 @@ and expr_to_str (exp: expr) : string =
           | Geq -> ">="
           | Equal -> "=="
           | Neq -> "!="
+          | Mod -> "%"
     in 
     match exp with
       | Value x -> value_to_str x

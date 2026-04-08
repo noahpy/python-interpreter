@@ -11,7 +11,7 @@ let%expect_test "eval_expr: eval int value" =
     print_s [%sexp (r1: value)];
     [%expect {| (IntV 1) |}];
     print_s [%sexp (p: program_state)];
-    [%expect {| ((program ()) (ip 0) (variables ())) |}]
+    [%expect {| ((program ()) (ip 0) (variables ()) (local_variables ())) |}]
 
     
 let%expect_test "eval_expr: eval float value" =
@@ -20,7 +20,7 @@ let%expect_test "eval_expr: eval float value" =
     print_s [%sexp (r1: value)];
     [%expect {| (FloatV 3.141592) |}];
     print_s [%sexp (p: program_state)];
-    [%expect {| ((program ()) (ip 0) (variables ())) |}]
+    [%expect {| ((program ()) (ip 0) (variables ()) (local_variables ())) |}]
 
 let%expect_test "eval_expr: eval string value" =
     let p = Interpreter.init_program_state [] in
@@ -28,7 +28,7 @@ let%expect_test "eval_expr: eval string value" =
     print_s [%sexp (r1: value)];
     [%expect {| (StringV "Hello World") |}];
     print_s [%sexp (p: program_state)];
-    [%expect {| ((program ()) (ip 0) (variables ())) |}]
+    [%expect {| ((program ()) (ip 0) (variables ()) (local_variables ())) |}]
 
 
 let%expect_test "eval_expr: eval bool value" =
@@ -37,7 +37,7 @@ let%expect_test "eval_expr: eval bool value" =
     print_s [%sexp (r1: value)];
     [%expect {| (BoolV true) |}];
     print_s [%sexp (p: program_state)];
-    [%expect {| ((program ()) (ip 0) (variables ())) |}]
+    [%expect {| ((program ()) (ip 0) (variables ()) (local_variables ())) |}]
 
 let%expect_test "eval_expr: eval exception value" =
     let p = Interpreter.init_program_state [] in
@@ -45,7 +45,7 @@ let%expect_test "eval_expr: eval exception value" =
     print_s [%sexp (r1: value)];
     [%expect {| (Exception "Test exception") |}];
     print_s [%sexp (p: program_state)];
-    [%expect {| ((program ()) (ip 0) (variables ())) |}]
+    [%expect {| ((program ()) (ip 0) (variables ()) (local_variables ())) |}]
 
 let%expect_test "eval_expr: eval Ntwo value" =
     let p = Interpreter.init_program_state [] in
@@ -53,7 +53,7 @@ let%expect_test "eval_expr: eval Ntwo value" =
     print_s [%sexp (r1: value)];
     [%expect {| Ntwo |}];
     print_s [%sexp (p: program_state)];
-    [%expect {| ((program ()) (ip 0) (variables ())) |}]
+    [%expect {| ((program ()) (ip 0) (variables ()) (local_variables ())) |}]
 
 let%expect_test "eval_expr: eval list value" =
     let p = Interpreter.init_program_state [] in
@@ -61,7 +61,7 @@ let%expect_test "eval_expr: eval list value" =
     print_s [%sexp (r1: value)];
     [%expect {| (ListV ((IntV 1) (FloatV 12.5) (StringV "Hello World"))) |}];
     print_s [%sexp (p: program_state)];
-    [%expect {| ((program ()) (ip 0) (variables ())) |}]
+    [%expect {| ((program ()) (ip 0) (variables ()) (local_variables ())) |}]
 
 
 (* Variable evaluation *)
@@ -73,7 +73,7 @@ let%expect_test "eval_expr: eval undeclared variable" =
     print_s [%sexp (r1: value)];
     [%expect {| (Exception "NameError: name 'x' is not defined") |}];
     print_s [%sexp (p: program_state)];
-    [%expect {| ((program ()) (ip 0) (variables ())) |}]
+    [%expect {| ((program ()) (ip 0) (variables ()) (local_variables ())) |}]
 
 let%expect_test "eval_expr: eval single variable" =
     let p = Interpreter.init_program_state [Assign("x", Value(IntV 1))] in
@@ -84,7 +84,7 @@ let%expect_test "eval_expr: eval single variable" =
     print_s [%sexp (p: program_state)];
     [%expect {|
       ((program ((Assign (x (Value (IntV 1)))))) (ip 0)
-       (variables ((x ((Value (IntV 1)))))))
+       (variables ((x ((Value (IntV 1)))))) (local_variables ((x true))))
       |}]
 
 let%expect_test "eval_expr: eval multiple variable" =
@@ -97,7 +97,8 @@ let%expect_test "eval_expr: eval multiple variable" =
     print_s [%sexp (p: program_state)];
     [%expect {|
       ((program ((Assign (x (Value (IntV 1)))) (Assign (y (Value (IntV 2))))))
-       (ip 0) (variables ((x ((Value (IntV 1)))) (y ((Value (IntV 2)))))))
+       (ip 0) (variables ((x ((Value (IntV 1)))) (y ((Value (IntV 2))))))
+       (local_variables ((x true) (y true))))
       |}]
 
 let%expect_test "eval_expr: eval two variables with one missing" =
@@ -109,7 +110,7 @@ let%expect_test "eval_expr: eval two variables with one missing" =
     print_s [%sexp (p: program_state)];
     [%expect {|
       ((program ((Assign (x (Value (IntV 1)))))) (ip 0)
-       (variables ((x ((Value (IntV 1)))))))
+       (variables ((x ((Value (IntV 1)))))) (local_variables ((x true))))
       |}]
 
 let%expect_test "eval_expr: eval two variables with both missing" =
@@ -124,7 +125,7 @@ let%expect_test "eval_expr: eval two variables with both missing" =
        \nNameError: name 'y' is not defined")
       |}];
     print_s [%sexp (p: program_state)];
-    [%expect {| ((program ()) (ip 0) (variables ())) |}]
+    [%expect {| ((program ()) (ip 0) (variables ()) (local_variables ())) |}]
 
 let%expect_test "eval_expr: use undeclared variable as function" =
     let p = Interpreter.init_program_state [] in
@@ -133,7 +134,7 @@ let%expect_test "eval_expr: use undeclared variable as function" =
     print_s [%sexp (r1: value)];
     [%expect {| (Exception "NameError: name 'x' is not defined") |}];
     print_s [%sexp (p: program_state)];
-    [%expect {| ((program ()) (ip 0) (variables ())) |}]
+    [%expect {| ((program ()) (ip 0) (variables ()) (local_variables ())) |}]
 
 let%expect_test "eval_expr: use declared variable as function" =
     let p = Interpreter.init_program_state [Assign("x", Value(IntV 1))] in
@@ -144,7 +145,7 @@ let%expect_test "eval_expr: use declared variable as function" =
     print_s [%sexp (p: program_state)];
     [%expect {|
       ((program ((Assign (x (Value (IntV 1)))))) (ip 0)
-       (variables ((x ((Value (IntV 1)))))))
+       (variables ((x ((Value (IntV 1)))))) (local_variables ((x true))))
       |}]
 
 let%expect_test "eval_expr: eval multiple recursive variables" =
@@ -157,7 +158,8 @@ let%expect_test "eval_expr: eval multiple recursive variables" =
     print_s [%sexp (p: program_state)];
     [%expect {|
       ((program ((Assign (y (Value (IntV 2)))) (Assign (x (Var_Ref y))))) (ip 0)
-       (variables ((x ((Value (IntV 2)))) (y ((Value (IntV 2)))))))
+       (variables ((x ((Value (IntV 2)))) (y ((Value (IntV 2))))))
+       (local_variables ((x true) (y true))))
       |}]
 
 let%expect_test "eval_expr: eval multiple recursive variables: missing" =
@@ -172,7 +174,8 @@ let%expect_test "eval_expr: eval multiple recursive variables: missing" =
       ((program ((Assign (x (Var_Ref z))) (Assign (y (Value (IntV 2)))))) (ip 0)
        (variables
         ((x ((Value (Exception "NameError: name 'z' is not defined"))))
-         (y ((Value (IntV 2)))))))
+         (y ((Value (IntV 2))))))
+       (local_variables ((x true) (y true))))
       |}]
 
 let%expect_test "eval_expr: eval circular variable assignment" =
@@ -187,7 +190,8 @@ let%expect_test "eval_expr: eval circular variable assignment" =
       ((program
         ((Assign (y (Value (IntV 2)))) (Assign (x (Var_Ref y)))
          (Assign (y (Var_Ref x)))))
-       (ip 0) (variables ((x ((Value (IntV 2)))) (y ((Value (IntV 2)))))))
+       (ip 0) (variables ((x ((Value (IntV 2)))) (y ((Value (IntV 2))))))
+       (local_variables ((x true) (y true))))
       |}]
 
 let%expect_test "eval_expr: eval self-referencing variable assignment" =
@@ -202,7 +206,7 @@ let%expect_test "eval_expr: eval self-referencing variable assignment" =
       ((program
         ((Assign (x (Value (IntV 2))))
          (Assign (x (Bin_Exp ((Var_Ref x) Add (Value (IntV 1))))))))
-       (ip 0) (variables ((x ((Value (IntV 3)))))))
+       (ip 0) (variables ((x ((Value (IntV 3)))))) (local_variables ((x true))))
       |}]
 
 (* List evaluation *)
@@ -213,7 +217,7 @@ let%expect_test "eval_expr: evaluate list with expressions" =
     print_s [%sexp (r1: value)];
     [%expect {| (ListV ((IntV 1) (IntV 3))) |}];
     print_s [%sexp (p: program_state)];
-    [%expect {| ((program ()) (ip 0) (variables ())) |}]
+    [%expect {| ((program ()) (ip 0) (variables ()) (local_variables ())) |}]
 
 let%expect_test "eval_expr: evaluate list with expressions (with variables)" =
     let p = Interpreter.init_program_state [Assign("x", Value(IntV 2))] in
@@ -224,7 +228,7 @@ let%expect_test "eval_expr: evaluate list with expressions (with variables)" =
     print_s [%sexp (p: program_state)];
     [%expect {|
       ((program ((Assign (x (Value (IntV 2)))))) (ip 0)
-       (variables ((x ((Value (IntV 2)))))))
+       (variables ((x ((Value (IntV 2)))))) (local_variables ((x true))))
       |}]
 
 let%expect_test "eval_expr: evaluate recursing list" =
@@ -239,7 +243,7 @@ let%expect_test "eval_expr: evaluate recursing list" =
     print_s [%sexp (p: program_state)];
     [%expect {|
       ((program ((Assign (x (Value (IntV 2)))))) (ip 0)
-       (variables ((x ((Value (IntV 2)))))))
+       (variables ((x ((Value (IntV 2)))))) (local_variables ((x true))))
       |}]
 
 let%expect_test "eval_expr: evaluate list in variable" =
@@ -265,7 +269,8 @@ let%expect_test "eval_expr: evaluate list in variable" =
               ((Value (IntV 1))
                (Bin_Exp ((Value (IntV 2)) Mul (ListE ((Value (StringV hello))))))))
              (Value (FloatV 3.14))))))
-         (x ((Value (IntV 2)))))))
+         (x ((Value (IntV 2))))))
+       (local_variables ((l true) (x true))))
       |}];
     let r1 = Eval.Eval_ex.eval_expr (Var_Ref("l")) p in
     print_s [%sexp (r1: value)];
@@ -284,5 +289,6 @@ let%expect_test "eval_expr: evaluate list in variable" =
             (ListV
              ((ListV ((IntV 1) (ListV ((StringV hello) (StringV hello)))))
               (FloatV 3.14))))))
-         (x ((Value (IntV 2)))))))
+         (x ((Value (IntV 2))))))
+       (local_variables ((l true) (x true))))
       |}]

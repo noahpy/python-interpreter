@@ -29,6 +29,26 @@
 {
   (* ---- HEADER: plain OCaml code ---- *)
   open Parser  (* gives us access to token constructors: INT, DEF, etc. *)
+
+  (** Interpret Python escape sequences in a string literal. *)
+  let unescape s =
+    let buf = Buffer.create (String.length s) in
+    let len = String.length s in
+    let rec loop i =
+      if i >= len then Buffer.contents buf
+      else if Char.equal s.[i] '\\' && i + 1 < len then
+        (match s.[i + 1] with
+         | 'n'  -> Buffer.add_char buf '\n'; loop (i + 2)
+         | 't'  -> Buffer.add_char buf '\t'; loop (i + 2)
+         | '\\' -> Buffer.add_char buf '\\'; loop (i + 2)
+         | '\'' -> Buffer.add_char buf '\''; loop (i + 2)
+         | '"'  -> Buffer.add_char buf '"';  loop (i + 2)
+         | 'r'  -> Buffer.add_char buf '\r'; loop (i + 2)
+         | '0'  -> Buffer.add_char buf '\000'; loop (i + 2)
+         | c    -> Buffer.add_char buf '\\'; Buffer.add_char buf c; loop (i + 2))
+      else (Buffer.add_char buf s.[i]; loop (i + 1))
+    in
+    loop 0
 }
 
 (* ---- NAMED PATTERNS ---- *)
@@ -74,8 +94,8 @@ rule read = parse
   (* -- Literals -- *)
   | digit+ as n                       { INT (int_of_string n) }
   | digit+ '.' digit* as f            { FLOAT (float_of_string f) }
-  | '"' ([^ '"' '\n']* as s) '"'      { STRING s }
-  | '\'' ([^ '\'' '\n']* as s) '\''   { STRING s }
+  | '"' ([^ '"' '\n']* as s) '"'      { STRING (unescape s) }
+  | '\'' ([^ '\'' '\n']* as s) '\''   { STRING (unescape s) }
 
   (* -- Identifiers: anything starting with alpha, then alnum -- *)
   | alpha alnum* as id  { IDENT id }

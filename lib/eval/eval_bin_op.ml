@@ -47,6 +47,7 @@ let eval_int_op (x1: int) (op: bin_op) (x2: int) : value =
       | Geq -> BoolV(x1 >= x2)
       | Equal -> BoolV(x1 = x2)
       | Neq -> BoolV(x1 <> x2)
+      | Mod -> if x2 = 0 then Exception "ZeroDivisionError: integer modulo by zero" else IntV(x1 % x2)
       | And -> IntV(max x1 x2)
       | Or -> IntV(min x1 x2)
 
@@ -64,6 +65,7 @@ let eval_float_op (x1: float) (op: bin_op) (x2: float) : value =
       | Geq -> BoolV(x1 >= x2)
       | Equal -> BoolV(x1 = x2)
       | Neq -> BoolV(x1 <> x2)
+      | Mod -> if x2 = 0.0 then Exception "ZeroDivisionError: float modulo by zero" else FloatV(Float.mod_float x1 x2)
       | And -> FloatV(Float.max x1 x2)
       | Or -> FloatV(Float.min x1 x2)
 

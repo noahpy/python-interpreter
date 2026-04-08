@@ -45,7 +45,7 @@
 %token <float>  FLOAT
 %token <string> STRING
 %token <string> IDENT
-%token <int>    SPACES    (* number of spaces — used by indent wrapper *)
+%token <int>    SPACES    (* number of spaces — consumed by indent buffer *)
 
 (* Keyword tokens *)
 %token DEF RETURN IF ELIF ELSE WHILE FOR IN PASS
@@ -78,88 +78,99 @@
 
 (* ============================================================
    GRAMMAR RULES
-   ============================================================ *)
+   ============================================================
+
+   The indent buffer emits:
+   - NEWLINE at the end of each content line (statement separator)
+   - INDENT / DEDENT for indentation changes
+   - Mid-line SPACES are stripped and never reach the parser
+
+   Compound statements (if/while/for/def) consume a block which
+   starts with NEWLINE INDENT and ends with DEDENT. They do NOT
+   require a trailing NEWLINE — the block's DEDENT is sufficient
+   to terminate them. Simple statements require NEWLINE after them.
+*)
 
 (* A program is a list of statements, then EOF *)
 program:
-  | stmts = stmts_with_eof; EOF { stmts }
+  | s = stmts; EOF  { s }
 
-(* ---- STATEMENTS ---- *)
+(* Statement list — used at top level and inside blocks.
+   Simple statements are terminated by NEWLINE.
+   Compound statements are self-terminating (end with DEDENT). *)
+stmts:
+  | (* empty *)                                     { [] }
+  | NEWLINE; rest = stmts                           { rest }
+  | s = simple_stmt; NEWLINE; rest = stmts          { s :: rest }
+  | s = simple_stmt                                 { [s] }
+  | s = compound_stmt; rest = stmts                 { s :: rest }
 
-stmts_with_eof:
-  | (* empty *)                                       { [] }
-  | NEWLINE; rest = stmts_with_eof                  { rest }
-  | s = stmt; NEWLINE; rest = stmts_with_eof   { s :: rest }
-  | s = stmt                                         { [s] }
-
-stmt:
-  | s = simple_stmt                         { s }
-  (* | s = compound_stmt                 { s } *)
-
-ident:
-  | name = IDENT; option(SPACES) { name }
+(* ---- SIMPLE STATEMENTS ---- *)
 
 simple_stmt:
-  | name = ident; EQUALS; option(SPACES); x = expr  { Assign (name, x) }
-  | RETURN; option(SPACES) e = option(expr)  { match e with Some(e) -> Return e | _ -> Return (Value(Ntwo))}
-  | e = expr                            { Expr e }
+  | name = IDENT; EQUALS; x = expr   { Assign (name, x) }
+  | RETURN; e = option(expr)          { match e with Some(e) -> Return e | _ -> Return (Value(Ntwo)) }
+  | PASS                              { Pass }
+  | e = expr                          { Expr e }
 
-(* compound_stmt: *)
-(*   | DEF; name = IDENT; *)
-(*     LPAREN; params = separated_list(COMMA, IDENT); RPAREN; *)
-(*     COLON; body = block *)
-(*     { FunDef (name, params, body) } *)
+(* ---- COMPOUND STATEMENTS ---- *)
 
-(*   | IF; cond = expr; COLON; *)
-(*     then_body = block; *)
-(*     else_body = else_clause *)
-(*     { If (cond, then_body, else_body) } *)
+compound_stmt:
+  | DEF; name = IDENT;
+    LPAREN; params = separated_list(COMMA, IDENT); RPAREN;
+    COLON; body = block
+    { FunDef (name, params, body) }
 
-(*   | WHILE; cond = expr; COLON; *)
-(*     body = block *)
-(*     { While (cond, body) } *)
+  | IF; cond = expr; COLON;
+    then_body = block;
+    else_body = else_clause
+    { If (cond, then_body, else_body) }
 
-(*   | FOR; var = IDENT; IN; iter = expr; COLON; *)
-(*     body = block *)
-(*     { For (var, iter, body) } *)
+  | WHILE; cond = expr; COLON;
+    body = block
+    { While (cond, body) }
 
-(* A block is INDENT, one or more statements, DEDENT *)
-(* block: *)
-(*   | NEWLINE; INDENT; stmts = nonempty_list(stmt); DEDENT *)
-(*     { stmts } *)
+  | FOR; var = IDENT; IN; iter = expr; COLON;
+    body = block
+    { For (var, iter, body) }
+
+(* A block is NEWLINE, INDENT, statements, DEDENT *)
+block:
+  | NEWLINE; INDENT; s = stmts; DEDENT   { s }
 
 (* else / elif chains *)
-(* else_clause: *)
-(*   | (* empty *)                                     { [] } *)
-(*   | ELSE; COLON; body = block                       { body } *)
-(*   | ELIF; cond = expr; COLON; *)
-(*     body = block; rest = else_clause *)
-(*     { [If (cond, body, rest)] } *)
+else_clause:
+  | (* empty *)                                     { [] }
+  | ELSE; COLON; body = block                       { body }
+  | ELIF; cond = expr; COLON;
+    body = block; rest = else_clause
+    { [If (cond, body, rest)] }
 
 (* ---- EXPRESSIONS ---- *)
-
-list_sep:
-   | COMMA option(SPACES) { () }
+(* Note: mid-line SPACES are stripped by the indent buffer,
+   so no option(SPACES) is needed anywhere in expression rules. *)
 
 expr:
-  | e = values; option(SPACES);                                                { e }
-  | name = ident                                                               { Var_Ref name }
-  | name = ident; LPAREN;
-    args = separated_list(COMMA, expr); RPAREN                                 { Func_App(name, args) }
-  | a = expr; PLUS; option(SPACES); b = expr                            { Bin_Exp (a, Add, b) }
-  | a = expr; MINUS; option(SPACES); b = expr                            { Bin_Exp (a, Sub, b) }
-  | a = expr; STAR; option(SPACES); b = expr                            { Bin_Exp (a, Mul, b) }
-  | a = expr; SLASH; option(SPACES); b = expr                            { Bin_Exp (a, Div, b) }
-  | a = expr; AND; option(SPACES); b = expr                              { Bin_Exp (a, And, b) }
-  | a = expr; OR; option(SPACES); b = expr                               { Bin_Exp (a, Or, b) }
-  | a = expr; EQEQ; option(SPACES); b = expr                             { Bin_Exp (a, Equal, b) }
-  | a = expr; NEQ; option(SPACES); b = expr                              { Bin_Exp (a, Neq, b) }
-  | a = expr; LT; option(SPACES); b = expr                               { Bin_Exp (a, Less, b) }
-  | a = expr; GT; option(SPACES); b = expr                               { Bin_Exp (a, Greater, b) }
-  | a = expr; LTE; option(SPACES); b = expr                              { Bin_Exp (a, Leq, b) }
-  | a = expr; GTE; option(SPACES); b = expr                              { Bin_Exp (a, Geq, b) }
-  | LBRACKET; option(SPACES); elts = separated_list(list_sep, expr); RBRACKET; option(SPACES)  { ListE elts }
-  | LPAREN; option(SPACES); e = expr; RPAREN; option(SPACES)                   { e }
+  | e = values                                                             { e }
+  | name = IDENT                                                           { Var_Ref name }
+  | name = IDENT; LPAREN;
+    args = separated_list(COMMA, expr); RPAREN                             { Func_App(name, args) }
+  | a = expr; PLUS; b = expr                                               { Bin_Exp (a, Add, b) }
+  | a = expr; MINUS; b = expr                                              { Bin_Exp (a, Sub, b) }
+  | a = expr; STAR; b = expr                                               { Bin_Exp (a, Mul, b) }
+  | a = expr; SLASH; b = expr                                              { Bin_Exp (a, Div, b) }
+  | a = expr; PERCENT; b = expr                                            { Bin_Exp (a, Mod, b) }
+  | a = expr; AND; b = expr                                                { Bin_Exp (a, And, b) }
+  | a = expr; OR; b = expr                                                 { Bin_Exp (a, Or, b) }
+  | a = expr; EQEQ; b = expr                                              { Bin_Exp (a, Equal, b) }
+  | a = expr; NEQ; b = expr                                                { Bin_Exp (a, Neq, b) }
+  | a = expr; LT; b = expr                                                { Bin_Exp (a, Less, b) }
+  | a = expr; GT; b = expr                                                 { Bin_Exp (a, Greater, b) }
+  | a = expr; LTE; b = expr                                               { Bin_Exp (a, Leq, b) }
+  | a = expr; GTE; b = expr                                               { Bin_Exp (a, Geq, b) }
+  | NOT; e = expr                                                          { Bin_Exp (Value(BoolV true), Neq, e) }
+  | LBRACKET; elts = separated_list(COMMA, expr); RBRACKET                { ListE elts }
+  | LPAREN; e = expr; RPAREN                                              { e }
   (* | LBRACE; entries = separated_list(COMMA, dict_entry); RBRACE *)
   (*   { DictExpr entries } *)
 
@@ -171,6 +182,8 @@ values:
   | TRUE                                           { Value (BoolV true) }
   | FALSE                                          { Value (BoolV false) }
   | NONE                                           { Value (Ntwo) }
+  | MINUS; n = INT %prec UMINUS                    { Value (IntV (-n)) }
+  | MINUS; f = FLOAT %prec UMINUS                  { Value (FloatV (-.f)) }
 
 (* dict_entry: *)
 (*   | k = expr; COLON; v = expr                      { (k, v) } *)

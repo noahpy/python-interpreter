@@ -54,7 +54,8 @@ and eval_func_app (name: string) (expressions: expr list) (state: program_state)
                           (f_off: func_offcall) (args: value list) (state: program_state) : value =
             let get_res () : value = match f with
                             | Func_Opq(f_op) -> f_op state
-                            | Func_Stat(statements) -> eval_program {state with program = statements} 
+                            | Func_Stat(statements) -> eval_program {state with program = statements; 
+                                                    local_variables = Hashtbl.create (module String)} 
             in match f_on args state with
               | Ok() -> let res = get_res () in   
                         (match f_off state with
@@ -84,7 +85,83 @@ and eval_list (exs: expr list) (state: program_state) : value =
       | Error(e) -> Exception e
 
 
-and eval_program (prog:program_state) : value = 
+and eval_if (cond: expr) (then_body: statement list) (else_body: statement list)
+    (prog: program_state) : value option =
+    let cond_val = eval_expr cond prog in
+    let is_truthy (v: value) : bool =
+        match v with
+          | BoolV b -> b
+          | IntV n -> n <> 0
+          | FloatV f -> Float.(f <> 0.0)
+          | StringV s -> not (String.is_empty s)
+          | ListV l -> not (List.is_empty l)
+          | Ntwo -> false
+          | _ -> true
+    in
+    let body = if is_truthy cond_val then then_body else else_body in
+    let res = eval_program {prog with program = body} in
+    match res with
+      | Ntwo -> None
+      | v -> Some v
+
+and eval_while (cond: expr) (body: statement list)
+    (prog: program_state) : unit =
+    let is_truthy (v: value) : bool =
+        match v with
+          | BoolV b -> b
+          | IntV n -> n <> 0
+          | FloatV f -> Float.(f <> 0.0)
+          | StringV s -> not (String.is_empty s)
+          | ListV l -> not (List.is_empty l)
+          | Ntwo -> false
+          | _ -> true
+    in
+    let rec loop () =
+        let cond_val = eval_expr cond prog in
+        if is_truthy cond_val then begin
+            let _ = eval_program {prog with program = body} in
+            loop ()
+        end
+    in loop ()
+
+and eval_for (var: string) (iter: expr) (body: statement list)
+    (prog: program_state) : unit =
+    let iter_val = eval_expr iter prog in
+    match iter_val with
+      | ListV items ->
+        List.iter items ~f:(fun item ->
+            Hash_utils.replace_variable prog var (Value item);
+            let _ = eval_program {prog with program = body} in
+            ()
+        )
+      | _ -> raise (Failure "TypeError: object is not iterable")
+
+and eval_fundef (name: string) (params: string list) (body: statement list)
+    (prog: program_state) : unit =
+    let f = Func_Stat body in
+    let f_on (args: value list) (state: program_state) : (unit, string) Result.t =
+        let expected = List.length params in
+        let actual = List.length args in
+        if expected <> actual then
+            Error (Printf.sprintf "TypeError: %s() takes %d positional argument(s) but %d were given"
+                     name expected actual)
+        else begin
+            List.iter2_exn params args ~f:(fun param arg ->
+                Hash_utils.add_variable state param (Value arg)
+            );
+            Ok ()
+        end
+    in
+    let f_off (state: program_state) : (unit, string) Result.t =
+        Hash_utils.remove_local_variabels state;
+        List.iter params ~f:(fun param ->
+            Hash_utils.remove_variable state param
+        );
+        Ok ()
+    in
+    Hash_utils.replace_variable prog name (Value (Function (f, f_on, f_off)))
+
+and eval_program (prog:program_state) : value =
     (* Interpret program and return value, if such is returned, else Ntwo. *)
     let assign_var (name: string) (exp: expr) (prog: program_state) : unit =
     (* Handle variable assignment *)
@@ -101,13 +178,18 @@ and eval_program (prog:program_state) : value =
               | Func_App(x, args) -> Func_App(x, List.map args ~f:remove_self_ref)
               | ListE(x) -> ListE(List.map x ~f:remove_self_ref)
         in let cleaned_exp = remove_self_ref exp
-        in Hash_utils.replace_variable prog name cleaned_exp
-    in let interpret_helper (stat: statement) (prog:program_state) : value option = 
+        in Hash_utils.add_local_variable prog name cleaned_exp
+    in let interpret_helper (stat: statement) (prog:program_state) : value option =
         match stat with
           | Expr(exp) -> eval_expr_top exp prog; None;
           | Assign(name, exp) -> assign_var name exp prog; None;
           | Func_Def(name, f_on, f, f_off) -> Hash_utils.add_variable prog name (Value(Function(f_on, f, f_off))); None;
           | Return(exp) -> Some (eval_expr exp prog)
+          | Pass -> None;
+          | If(cond, then_body, else_body) -> eval_if cond then_body else_body prog
+          | While(cond, body) -> eval_while cond body prog; None;
+          | For(var, iter, body) -> eval_for var iter body prog; None;
+          | FunDef(name, params, body) -> eval_fundef name params body prog; None;
     in match prog.program with
       | [] -> Ntwo
       | h::r -> (

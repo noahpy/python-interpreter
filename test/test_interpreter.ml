@@ -33,7 +33,8 @@ let%expect_test "interpret print after self-referencing variable assignment" =
          (y
           ((Bin_Exp
             ((Value (FloatV 10)) Div
-             (Bin_Exp ((Value (IntV 2)) Mul (Value (IntV 3)))))))))))
+             (Bin_Exp ((Value (IntV 2)) Mul (Value (IntV 3))))))))))
+       (local_variables ((x true) (y true))))
       |}]
 
 let%expect_test "interpret print after defining custom add function with overlapping local variable names" =
@@ -75,7 +76,8 @@ let%expect_test "interpret print after defining custom add function with overlap
               <opaque> <opaque>)))))
          (input ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (print ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
-         (res ((Value (IntV 3)))) (x ((Value (IntV 2)))) (y ((Value (IntV 1)))))))
+         (res ((Value (IntV 3)))) (x ((Value (IntV 2)))) (y ((Value (IntV 1))))))
+       (local_variables ((res true) (x true) (y true))))
       |}]
 
 let%expect_test "interpret print of list arithmetic" = 
@@ -102,7 +104,8 @@ let%expect_test "interpret print of list arithmetic" =
         ((input ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (print ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (x ((Value (ListV ((StringV hello) (StringV world))))))
-         (y ((Value (IntV 2)))) (z ((Value (ListV ((IntV 2) (IntV 3)))))))))
+         (y ((Value (IntV 2)))) (z ((Value (ListV ((IntV 2) (IntV 3))))))))
+       (local_variables ((x true) (y true) (z true))))
       |}]
 
 let%expect_test "interpret print after defining custom function with multiple statements" =
@@ -152,5 +155,7 @@ let%expect_test "interpret print after defining custom function with multiple st
               <opaque> <opaque>)))))
          (input ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (print ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
-         (res ((Value (IntV 5)))) (x ((Value (IntV 2)))) (y ((Value (IntV 1)))))))
+         (res ((Value (IntV 5)))) (x ((Value (IntV 1)) (Value (IntV 2))))
+         (y ((Value (IntV 1))))))
+       (local_variables ((res true) (x true) (y true))))
       |}]

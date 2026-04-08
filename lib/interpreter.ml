@@ -5,7 +5,7 @@ open Stdio
 
 let init_program_state ?(var_size: int=1) ?(load_stdlib: bool=false) (lines: statement list) : program_state =
     let varH = Hashtbl.create ~size:var_size (module String) in 
-    let p = {program = lines; ip = 0; variables = varH;} in
+    let p = {program = lines; ip = 0; variables = varH; local_variables = Hashtbl.create (module String)} in
     if load_stdlib then (Python_stdlib.Load.load_impls p; p) else p
 
 
@@ -23,8 +23,9 @@ let interpret ?(file_name:string="") ?(print_values:bool=false) ?(load_stdlib:bo
                     let channel = match file_name with "" -> stdin | _ -> In_channel.create file_name in
                     Lexing.from_channel channel 
                 in
+    let state = Indent_buffer.create () in
     try
-        let lines: (statement list) = Parser.program Lexer.read lexbuf in
+        let lines: (statement list) = Parser.program (Indent_buffer.next_token state) lexbuf in
         let p = init_program_state ~load_stdlib:load_stdlib lines in
         if print_ir then  
             (print_endline "Program IR:";
