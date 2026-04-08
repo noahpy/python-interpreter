@@ -3,3 +3,32 @@
 
 In order to learn OCaml (and more of Python), I chose this as my project.
 Still WIP.
+Lexes, parses, and evaluates a subset of Python including arithmetic, variables, lists, functions, and basic stdlib (`print`, `input`).
+
+## Useage
+
+To build, run:
+```bash
+dune build                              # Build the project
+```
+
+To run a Python file, run:
+```bash
+dune exec python-interpreter test.py    # Execute a Python file
+```
+If no arguments are provided, the interpreter will read from stdin:
+```bash
+cat test.py | dune exec python-interpreter
+```
+You can also directly invoke the generated binary in `_build/install/default/bin/python-interpreter`.
+
+To run tests, run:
+```bash
+dune runtest                            # Run all expect tests
+```
+
+Tests use `ppx_expect` inline expect tests. Test files live in `test/`.
+
+## Architecture
+
+The interpreter pipeline: **Source → Lexer (ocamllex) → Parser (menhir) → AST → Evaluator**
