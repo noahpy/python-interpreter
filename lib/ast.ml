@@ -66,6 +66,7 @@ and expr =
     | Var_Ref of string
     | Func_App of (string * expr list)
     | ListE of expr list
+    | AccessE of (expr * expr)
 [@@deriving sexp]
 
 and statement =
@@ -140,6 +141,7 @@ and expr_to_str (exp: expr) : string =
       | Var_Ref x -> x
       | Func_App (x, args) -> x ^ "(" ^ String.concat ~sep:", " (List.map args ~f:expr_to_str) ^ ")"
       | ListE x -> "[" ^ String.concat ~sep:", " (List.map x ~f:expr_to_str) ^ "]"
+      | AccessE (x1, x2) -> "(" ^ (expr_to_str x1) ^ "[" ^ (expr_to_str x2) ^ "]"
 
 let values_to_str (vals: value list) : string = 
     String.concat ~sep:" " (List.map vals ~f:value_to_str)

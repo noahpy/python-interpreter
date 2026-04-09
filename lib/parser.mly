@@ -171,6 +171,7 @@ expr:
   | NOT; e = expr                                                          { Bin_Exp (Value(BoolV true), Neq, e) }
   | LBRACKET; elts = separated_list(COMMA, expr); RBRACKET                { ListE elts }
   | LPAREN; e = expr; RPAREN                                              { e }
+  | a = expr; LBRACKET; i = expr; RBRACKET                                 { AccessE(a, i) }
   (* | LBRACE; entries = separated_list(COMMA, dict_entry); RBRACE *)
   (*   { DictExpr entries } *)
 

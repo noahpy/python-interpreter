@@ -12,6 +12,7 @@ let rec eval_expr (ex: expr) (state: program_state): value =
       | Var_Ref(name) -> eval_var name state
       | Func_App(name, expressions) -> eval_func_app name expressions state
       | ListE(expressions) -> eval_list expressions state
+      | AccessE(ex1, ex2) -> eval_access ex1 ex2 state
       (* | _ -> Exception "Not implemented yet." *)
 
 and eval_bin_op (ex1: expr) (op: bin_op) (ex2: expr) (state: program_state) : value =
@@ -83,6 +84,23 @@ and eval_list (exs: expr list) (state: program_state) : value =
     in match List.fold tmp_res ~init:(Ok []) ~f:reduce_if_exception with
       | Ok(x) -> ListV x
       | Error(e) -> Exception e
+
+
+and eval_access (accessed: expr) (key: expr) (state: program_state) : value =
+    let accessed_val = eval_expr accessed state in
+    let key_val = eval_expr key state in
+    match accessed_val with
+      | ListV l -> (
+          match key_val with
+            | IntV i -> let length = List.length l in
+                        let index = if i < 0 then length+i else i in
+                        (match List.nth l index with
+                          | Some(x) -> x
+                          | None -> Exception("IndexError: list index out of range")
+                        )
+            | _ -> Exception ("TypeError: list indices must be integers, not " ^ Sexp.to_string (sexp_of_value key_val))
+            )
+      | x -> Exception (String.concat ["TypeError: ";Sexp.to_string (sexp_of_value x);"object is not subscriptable."])
 
 
 and eval_if (cond: expr) (then_body: statement list) (else_body: statement list)
@@ -177,6 +195,7 @@ and eval_program (prog:program_state) : value =
               | Bin_Exp(x1, op, x2) -> Bin_Exp(remove_self_ref x1, op, remove_self_ref x2)
               | Func_App(x, args) -> Func_App(x, List.map args ~f:remove_self_ref)
               | ListE(x) -> ListE(List.map x ~f:remove_self_ref)
+              | AccessE(x1, x2) -> AccessE(remove_self_ref x1, remove_self_ref x2)
         in let cleaned_exp = remove_self_ref exp
         in Hash_utils.add_local_variable prog name cleaned_exp
     in let interpret_helper (stat: statement) (prog:program_state) : value option =
@@ -203,7 +222,7 @@ and eval_expr_top ?(print_values:bool=false) (ex: expr) (state: program_state) :
     (* Top-level evaluation function. Handles Exceptions if they come up. *)
     match eval_expr ex state with
       | Exception(e) -> print_endline "";
-                        print_endline ("Exception at line " ^ Int.to_string state.ip ^ ":");
+                        print_endline ("Exception at statement " ^ Int.to_string state.ip ^ ":");
                         print_endline e; 
                         raise (Failure "Program failed.")
       | x -> if print_values then value_to_output x else ()
