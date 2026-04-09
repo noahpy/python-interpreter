@@ -41,6 +41,87 @@ module Range_impl = struct
           | _ -> Exception("TypeError: range() takes at least 1 positional argument but 0 were given")
 end
 
-let load_impls (state: program_state) : unit = 
+module Int_impl = struct
+
+    let f_on:func_oncall = Helper.Helper_Generator.generate_fon_args 1 1 "int"
+
+    let f_off:func_offcall = Helper.Helper_Generator.generate_foff_args ()
+
+    let f (state: program_state) : value =
+        let args = Hash_utils.get_variable state "__args" in
+        match args with
+          | Some(Value(ListV([arg]))) ->
+            (match arg with
+              | IntV(_) -> arg
+              | FloatV(x) -> IntV(Float.to_int x)
+              | StringV(x) -> (match Int.of_string_opt x with
+                                | Some(i) -> IntV(i)
+                                | None -> Exception("ValueError: invalid literal for int() with base 10: '" ^ x ^ "'"))
+              | BoolV(x) -> IntV(if x then 1 else 0)
+              | _ -> Exception("TypeError: int() argument must be a string or a number, not '" ^ value_to_str arg ^ "'")
+            )
+          | _ -> Exception("TypeError: int() takes exactly one argument")
+end
+
+module Str_impl = struct
+
+    let f_on:func_oncall = Helper.Helper_Generator.generate_fon_args 0 1 "str"
+
+    let f_off:func_offcall = Helper.Helper_Generator.generate_foff_args ()
+
+    let f (state: program_state) : value =
+        let args = Hash_utils.get_variable state "__args" in
+        match args with
+          | Some(Value(ListV([]))) -> StringV("")
+          | Some(Value(ListV([arg]))) -> StringV(value_to_str arg)
+          | _ -> Exception("TypeError: str() takes at most 1 argument")
+end
+
+module Float_impl = struct
+
+    let f_on:func_oncall = Helper.Helper_Generator.generate_fon_args 1 1 "float"
+
+    let f_off:func_offcall = Helper.Helper_Generator.generate_foff_args ()
+
+    let f (state: program_state) : value =
+        let args = Hash_utils.get_variable state "__args" in
+        match args with
+          | Some(Value(ListV([arg]))) ->
+            (match arg with
+              | FloatV(_) -> arg
+              | IntV(x) -> FloatV(Float.of_int x)
+              | StringV(x) -> (match Float.of_string_opt x with
+                                | Some(f) -> FloatV(f)
+                                | None -> Exception("ValueError: could not convert string to float: '" ^ x ^ "'"))
+              | BoolV(x) -> FloatV(if x then 1.0 else 0.0)
+              | _ -> Exception("TypeError: float() argument must be a string or a number, not '" ^ value_to_str arg ^ "'")
+            )
+          | _ -> Exception("TypeError: float() takes exactly one argument")
+end
+
+module List_impl = struct
+
+    let f_on:func_oncall = Helper.Helper_Generator.generate_fon_args 0 1 "list"
+
+    let f_off:func_offcall = Helper.Helper_Generator.generate_foff_args ()
+
+    let f (state: program_state) : value =
+        let args = Hash_utils.get_variable state "__args" in
+        match args with
+          | Some(Value(ListV([]))) -> ListV([])
+          | Some(Value(ListV([arg]))) ->
+            (match arg with
+              | ListV(_) -> arg
+              | StringV(x) -> ListV(List.map (String.to_list x) ~f:(fun c -> StringV(String.of_char c)))
+              | _ -> Exception("TypeError: '" ^ value_to_str arg ^ "' object is not iterable")
+            )
+          | _ -> Exception("TypeError: list() takes at most 1 argument")
+end
+
+let load_impls (state: program_state) : unit =
     (* Load standard library functions implemented in this module. *)
     Utils.Hash_utils.add_variable state "range" (Value(Function(Func_Opq(Range_impl.f), Range_impl.f_on, Range_impl.f_off)));
+    Utils.Hash_utils.add_variable state "int" (Value(Function(Func_Opq(Int_impl.f), Int_impl.f_on, Int_impl.f_off)));
+    Utils.Hash_utils.add_variable state "str" (Value(Function(Func_Opq(Str_impl.f), Str_impl.f_on, Str_impl.f_off)));
+    Utils.Hash_utils.add_variable state "float" (Value(Function(Func_Opq(Float_impl.f), Float_impl.f_on, Float_impl.f_off)));
+    Utils.Hash_utils.add_variable state "list" (Value(Function(Func_Opq(List_impl.f), List_impl.f_on, List_impl.f_off)));
