@@ -43,7 +43,8 @@ print(l)
        (ip 0)
        (variables
         ((input ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
-         (print ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))))
+         (print ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (range ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))))
        (local_variables ()))
       [14, wowhu, 15.6]
       |}]
@@ -70,7 +71,8 @@ print(l)
        (ip 0)
        (variables
         ((input ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
-         (print ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))))
+         (print ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (range ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))))
        (local_variables ()))
       [1, 2, 3, 1, 2, 3, 1, 2, 3, 4, 5, 6]
       |}]
@@ -320,3 +322,64 @@ print(y)
 |} in
     interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
     [%expect {| Error: inconsistent indentation |}]
+
+
+let%expect_test "Jibberish should create an error" =
+    let program = {|
+jeff f(x):
+    return x
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {| Parse error at line 2, column 6 |}]
+
+let%expect_test "Unallowed syntax should create an error" =
+    let program = {|
+def def f(x):
+    return x
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {| Parse error at line 2, column 7 |}]
+
+let%expect_test "Unallowed syntax should create an error (2)" =
+    let program = {|
+def f(1x):
+    return 1x
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {| Parse error at line 2, column 7 |}]
+
+
+let%expect_test "Test range implementation" =
+    let program = {|
+print(range(10))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {| [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] |}]
+
+let%expect_test "Test range implementation (2)" =
+    let program = {|
+print(range(5, 10))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {| [5, 6, 7, 8, 9, 10] |}]
+
+let%expect_test "Test range implementation (3)" =
+    let program = {|
+print(range(5, 10, 2))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {| [5, 7, 9] |}]
+
+let%expect_test "Test range implementation (4)" =
+    let program = {|
+print(range(6, 2))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {| [] |}]
+
+let%expect_test "Test range implementation (5)" =
+    let program = {|
+print(range(6, 2, -1))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {| [6, 5, 4, 3, 2] |}]

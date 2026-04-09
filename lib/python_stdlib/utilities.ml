@@ -33,7 +33,9 @@ module Range_impl = struct
           | Some(Value(ListV(arg_list))) ->
             (match convert_to_intlist arg_list with
               | Ok(x) -> let (start, stop, step) = get_range x
-                         in ListV(List.init (stop - start) ~f:(fun i -> IntV(start + (i * step))))
+                         in let len = if step > 0 then max 0 ((stop - start) / step + 1) 
+                                                  else max 0 ((start - stop) / -step + 1)
+                         in ListV(List.init len ~f:(fun i -> IntV(start + (i * step))))
               | Error(x) -> Exception(x)
             )
           | _ -> Exception("TypeError: range() takes at least 1 positional argument but 0 were given")
