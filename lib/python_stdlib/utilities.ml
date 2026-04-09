@@ -33,8 +33,8 @@ module Range_impl = struct
           | Some(Value(ListV(arg_list))) ->
             (match convert_to_intlist arg_list with
               | Ok(x) -> let (start, stop, step) = get_range x
-                         in let len = if step > 0 then max 0 ((stop - start) / step + 1) 
-                                                  else max 0 ((start - stop) / -step + 1)
+                         in let len = if step > 0 then max 0 ((stop - start) / step + (if step > 1 then 1 else 0)) 
+                                                  else max 0 ((start - stop) / -step + (if step < 1 then 1 else 0))
                          in ListV(List.init len ~f:(fun i -> IntV(start + (i * step))))
               | Error(x) -> Exception(x)
             )
@@ -113,9 +113,27 @@ module List_impl = struct
             (match arg with
               | ListV(_) -> arg
               | StringV(x) -> ListV(List.map (String.to_list x) ~f:(fun c -> StringV(String.of_char c)))
-              | _ -> Exception("TypeError: '" ^ value_to_str arg ^ "' object is not iterable")
+              | _ -> Exception("TypeError: '" ^ Sexp.to_string (sexp_of_value arg) ^ "' object is not iterable")
             )
           | _ -> Exception("TypeError: list() takes at most 1 argument")
+end
+
+module Len_impl = struct
+
+    let f_on:func_oncall = Helper.Helper_Generator.generate_fon_args 1 1 "len"
+
+    let f_off:func_offcall = Helper.Helper_Generator.generate_foff_args ()
+
+    let f (state: program_state) : value =
+        let args = Hash_utils.get_variable state "__args" in
+        match args with
+          | Some(Value(ListV([arg]))) ->
+            (match arg with
+              | ListV(x) -> IntV(List.length x)
+              | StringV(x) -> IntV(String.length x)
+              | _ -> Exception("TypeError: object of type '" ^ Sexp.to_string (sexp_of_value arg) ^ "' has no len()")
+            )
+          | _ -> Exception("TypeError: len() takes exactly one argument")
 end
 
 let load_impls (state: program_state) : unit =
@@ -125,3 +143,4 @@ let load_impls (state: program_state) : unit =
     Utils.Hash_utils.add_variable state "str" (Value(Function(Func_Opq(Str_impl.f), Str_impl.f_on, Str_impl.f_off)));
     Utils.Hash_utils.add_variable state "float" (Value(Function(Func_Opq(Float_impl.f), Float_impl.f_on, Float_impl.f_off)));
     Utils.Hash_utils.add_variable state "list" (Value(Function(Func_Opq(List_impl.f), List_impl.f_on, List_impl.f_off)));
+    Utils.Hash_utils.add_variable state "len" (Value(Function(Func_Opq(Len_impl.f), Len_impl.f_on, Len_impl.f_off)));

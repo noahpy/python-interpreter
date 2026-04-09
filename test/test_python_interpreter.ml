@@ -45,6 +45,7 @@ print(l)
         ((float ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (input ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (int ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (len ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (list ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (print ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (range ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
@@ -77,6 +78,7 @@ print(l)
         ((float ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (input ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (int ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (len ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (list ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (print ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (range ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
@@ -362,14 +364,14 @@ let%expect_test "Test range implementation" =
 print(range(10))
 |} in
     interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
-    [%expect {| [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10] |}]
+    [%expect {| [0, 1, 2, 3, 4, 5, 6, 7, 8, 9] |}]
 
 let%expect_test "Test range implementation (2)" =
     let program = {|
 print(range(5, 10))
 |} in
     interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
-    [%expect {| [5, 6, 7, 8, 9, 10] |}]
+    [%expect {| [5, 6, 7, 8, 9] |}]
 
 let%expect_test "Test range implementation (3)" =
     let program = {|
@@ -391,6 +393,13 @@ print(range(6, 2, -1))
 |} in
     interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
     [%expect {| [6, 5, 4, 3, 2] |}]
+
+let%expect_test "Test range implementation (6)" =
+    let program = {|
+print(range(6, -10, -3))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {| [6, 3, 0, -3, -6, -9] |}]
 
 let%expect_test "Test list access" =
     let program = {|
@@ -438,3 +447,35 @@ print([[1,2,3], [4,5,6]][1][2 - (2 / 2)])
 |} in
     interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
     [%expect {| 5 |}]
+
+let%expect_test "Test len()" =
+    let program = {|
+print(len([1,2,4]))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {| 3 |}]
+
+let%expect_test "Test len() (2)" =
+    let program = {|
+print(len([1,2,4] * 10))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {| 30 |}]
+
+let%expect_test "Test len() (3)" =
+    let program = {|
+print(len("this string is long"))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {| 19 |}]
+
+let%expect_test "Test len() (4)" =
+    let program = {|
+print(len(3.14159))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      Exception at statement 0:
+      TypeError: object of type '(FloatV 3.14159)' has no len()
+      Error: Program failed.
+      |}]
