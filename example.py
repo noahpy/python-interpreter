@@ -10,12 +10,12 @@ def faculty(n):
         return n * faculty(n - 1)
 
 
-def many_faculties(n):
+def many_faculties(n, f):
     res = []
     for i in range(n):
-        res = res + [faculty(i)]
+        res = res + [f(i)]
     return res
 
-
-final_result = many_faculties(int(input("Enter a number: ")))
+num_computations = int(input("Enter a number: "))
+final_result = many_faculties(num_computations, faculty)
 print(final_result)

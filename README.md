@@ -4,6 +4,7 @@
 In order to learn OCaml (and more of Python), I chose this as my project.
 Still WIP.
 Lexes, parses, and evaluates a subset of Python including arithmetic, variables, lists, functions, and basic stdlib (`print`, `input`, `range`).
+It also supports higher-order functions and lazily evaluates expressions.
 To get a feel of what it can interpret, have a look at `example.py`.
 
 ## Useage
