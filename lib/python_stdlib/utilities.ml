@@ -28,7 +28,7 @@ module Range_impl = struct
                                           | (Ok(x1), Ok(x2)) -> Ok(x1@x2)
                                           | (Error(x1),_) -> Error(x1)
                                           | (_, Error(x2)) -> Error(x2))
-                            | _ -> Error("TypeError: range() takes integer arguments but was given")
+                            | x -> Error("TypeError: range() takes integer arguments but was given "^  Sexp.to_string (sexp_of_value x))
          in match args with
           | Some(Value(ListV(arg_list))) ->
             (match convert_to_intlist arg_list with
