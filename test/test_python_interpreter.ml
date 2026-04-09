@@ -42,9 +42,13 @@ print(l)
          (Expr (Func_App (print ((Var_Ref l)))))))
        (ip 0)
        (variables
-        ((input ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+        ((float ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (input ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (int ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (list ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (print ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
-         (range ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))))
+         (range ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (str ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))))
        (local_variables ()))
       [14, wowhu, 15.6]
       |}]
@@ -70,9 +74,13 @@ print(l)
          (Expr (Func_App (print ((Var_Ref l)))))))
        (ip 0)
        (variables
-        ((input ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+        ((float ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (input ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (int ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (list ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (print ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
-         (range ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))))
+         (range ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (str ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))))
        (local_variables ()))
       [1, 2, 3, 1, 2, 3, 1, 2, 3, 4, 5, 6]
       |}]
@@ -383,3 +391,50 @@ print(range(6, 2, -1))
 |} in
     interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
     [%expect {| [6, 5, 4, 3, 2] |}]
+
+let%expect_test "Test list access" =
+    let program = {|
+print([1,2,3][0])
+print([1,2,3][-1])
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      1
+      3
+      |}]
+
+let%expect_test "Test list access (2)" =
+    let program = {|
+print([1,2,3][-10])
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      Exception at statement 0:
+      IndexError: list index out of range
+      Error: Program failed.
+      |}]
+
+let%expect_test "Test list access (3)" =
+    let program = {|
+print([1,2,3][10])
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      Exception at statement 0:
+      IndexError: list index out of range
+      Error: Program failed.
+      |}]
+
+let%expect_test "Test list access (4)" =
+    let program = {|
+print([1,2,3][2 - (2 / 2)])
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {| 2 |}]
+
+let%expect_test "Test list access (5)" =
+    let program = {|
+print([[1,2,3], [4,5,6]][1][2 - (2 / 2)])
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {| 5 |}]
