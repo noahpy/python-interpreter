@@ -13,6 +13,7 @@ let rec eval_expr (ex: expr) (state: program_state): value =
       | Func_App(name, expressions) -> eval_func_app name expressions state
       | ListE(expressions) -> eval_list expressions state
       | AccessE(ex1, ex2) -> eval_access ex1 ex2 state
+      | DictE(pairs) -> eval_dict pairs state
       (* | _ -> Exception "Not implemented yet." *)
 
 and eval_bin_op (ex1: expr) (op: bin_op) (ex2: expr) (state: program_state) : value =
@@ -25,6 +26,8 @@ and eval_bin_op (ex1: expr) (op: bin_op) (ex2: expr) (state: program_state) : va
       | (BoolV x1, BoolV x2) -> Eval_bin_op.eval_bool_op x1 op x2
       | (ListV x1, v2) -> Eval_bin_op.eval_list_op x1 op v2
       | (v1, ListV x2) -> Eval_bin_op.eval_list_op x2 op v1
+      | (DictV x1, v2) -> Eval_bin_op.eval_dict_op (DictV x1) op v2
+      | (v1, DictV x2) -> Eval_bin_op.eval_dict_op v1 op (DictV x2)
       | (Exception e1, Exception e2) -> Exception (e1 ^ "\nand\n" ^ e2)
       | (Exception e1, _) -> Exception(e1)
       | (_, Exception e2) -> Exception(e2)
@@ -53,13 +56,16 @@ and eval_func_app (name: string) (expressions: expr list) (state: program_state)
         (* Determine if a variable is a function and apply it.*)
         let call_function (f: func_unapp) (f_on: func_oncall) 
                           (f_off: func_offcall) (args: value list) (state: program_state) : value =
-            let get_res () : value = match f with
-                            | Func_Opq(f_op) -> f_op state
-                            | Func_Stat(statements) -> eval_program {state with program = statements; 
-                                                    local_variables = Hashtbl.create (module String)} 
+            let get_res () : (value * program_state) = match f with
+                            | Func_Opq(f_op) -> (f_op state, state)
+                            | Func_Stat(statements) -> 
+                                    let new_state = {state with program = statements; 
+                                                     local_variables = Hashtbl.create (module String)}
+                                    in (eval_program new_state, new_state)
             in match f_on args state with
-              | Ok() -> let res = get_res () in   
-                        (match f_off state with
+              | Ok() -> (
+                  let res, new_state = get_res () in
+                  match f_off new_state with
                           | Ok() -> res
                           | Error(e) -> Exception e)
               | Error(e) -> Exception e
@@ -100,7 +106,22 @@ and eval_access (accessed: expr) (key: expr) (state: program_state) : value =
                         )
             | _ -> Exception ("TypeError: list indices must be integers, not " ^ Sexp.to_string (sexp_of_value key_val))
             )
+      | DictV h -> (
+          let s = value_to_str ~add_paren:true key_val in
+          match Hashtbl.find h s with
+                            | Some(x) -> x
+                            | None -> Exception("KeyError: '" ^ s ^ "' not in dictionary")
+                          )
       | x -> Exception (String.concat ["TypeError: ";Sexp.to_string (sexp_of_value x);"object is not subscriptable."])
+
+
+and eval_dict (pairs: (expr * expr) list) (state: program_state) : value =
+    let tmp_res = List.map pairs ~f:(fun (k, v) -> (value_to_str ~add_paren:true (eval_expr k state), eval_expr v state))
+    in match Hashtbl.of_alist_report_all_dups (module String) tmp_res with
+      | `Ok(h) -> DictV h
+      | `Duplicate_keys keys -> print_endline "Warning: Duplicate keys in dictionary literal."; 
+                                let filtered_pairs = List.filter tmp_res ~f:(fun (k, v) -> not (List.mem keys k ~equal:String.equal)) in
+                                DictV (Hashtbl.of_alist_exn (module String) filtered_pairs)
 
 
 and eval_if (cond: expr) (then_body: statement list) (else_body: statement list)
@@ -179,29 +200,53 @@ and eval_fundef (name: string) (params: string list) (body: statement list)
     in
     Hash_utils.replace_variable prog name (Value (Function (f, f_on, f_off)))
 
+
+and assign_var (name: string) (exp: expr) (index: expr option) (prog: program_state) : unit =
+    (* Handle variable assignment *)
+    let handle_index_assign (name: string) (exp: expr) (index: expr) (prog: program_state) : unit =
+        let index_val = eval_expr_exp index prog in
+        let accessed_val = eval_expr_exp (Var_Ref(name)) prog in
+        match accessed_val with
+          | ListV l -> (
+              match index_val with
+                | IntV i -> 
+                    let new_val = eval_expr_exp exp prog in
+                    let new_list = List.mapi l ~f:(fun j v -> if j = i then new_val else v) in
+                    Hash_utils.replace_variable prog name (Value(ListV new_list))
+                | _ -> raise (Failure "TypeError: indices must be integers")
+              )
+          | DictV h -> (
+              let s = value_to_str ~add_paren:true index_val in
+              let new_val = eval_expr_exp exp prog in
+              Hashtbl.set h ~key:s ~data:new_val;
+            )
+          | _ -> raise (Failure ("TypeError: object " ^ name ^ " is not subscriptable"))
+    in
+    let rec remove_self_ref (exp: expr) : expr =
+    (* Remove self-reference of variable being assigned. *)
+        match exp with
+          | Value(x) -> exp;
+          | Var_Ref(x) -> (match Hash_utils.get_variable prog x with
+                              | Some(v) -> v
+                              | None -> let msg = String.concat ["NameError: name '";x;"' is not defined"]
+                                        in Value(Exception(msg))
+                          )
+          | Bin_Exp(x1, op, x2) -> Bin_Exp(remove_self_ref x1, op, remove_self_ref x2)
+          | Func_App(x, args) -> Func_App(x, List.map args ~f:remove_self_ref)
+          | ListE(x) -> ListE(List.map x ~f:remove_self_ref)
+          | AccessE(x1, x2) -> AccessE(remove_self_ref x1, remove_self_ref x2)
+          | DictE(x) -> DictE(List.map x ~f:(fun (k, v) -> (remove_self_ref k, remove_self_ref v)))
+    in match index with
+      | Some(i) -> handle_index_assign name (remove_self_ref exp) i prog
+      | None -> let cleaned_exp = remove_self_ref exp
+                in Hash_utils.add_local_variable prog name cleaned_exp
+
 and eval_program (prog:program_state) : value =
     (* Interpret program and return value, if such is returned, else Ntwo. *)
-    let assign_var (name: string) (exp: expr) (prog: program_state) : unit =
-    (* Handle variable assignment *)
-        let rec remove_self_ref (exp: expr) : expr =
-        (* Remove self-reference of variable being assigned. *)
-            match exp with
-              | Value(x) -> exp;
-              | Var_Ref(x) -> (match Hash_utils.get_variable prog x with
-                                  | Some(v) -> v
-                                  | None -> let msg = String.concat ["NameError: name '";x;"' is not defined"]
-                                            in Value(Exception(msg))
-                              )
-              | Bin_Exp(x1, op, x2) -> Bin_Exp(remove_self_ref x1, op, remove_self_ref x2)
-              | Func_App(x, args) -> Func_App(x, List.map args ~f:remove_self_ref)
-              | ListE(x) -> ListE(List.map x ~f:remove_self_ref)
-              | AccessE(x1, x2) -> AccessE(remove_self_ref x1, remove_self_ref x2)
-        in let cleaned_exp = remove_self_ref exp
-        in Hash_utils.add_local_variable prog name cleaned_exp
-    in let interpret_helper (stat: statement) (prog:program_state) : value option =
+    let interpret_helper (stat: statement) (prog:program_state) : value option =
         match stat with
           | Expr(exp) -> eval_expr_top exp prog; None;
-          | Assign(name, exp) -> assign_var name exp prog; None;
+          | Assign(name, exp, index) -> assign_var name exp index prog; None;
           | Func_Def(name, f_on, f, f_off) -> Hash_utils.add_variable prog name (Value(Function(f_on, f, f_off))); None;
           | Return(exp) -> Some (eval_expr exp prog)
           | Pass -> None;
@@ -217,15 +262,18 @@ and eval_program (prog:program_state) : value =
             | Some(v) -> v
         )
 
-
-and eval_expr_top ?(print_values:bool=false) (ex: expr) (state: program_state) : unit = 
-    (* Top-level evaluation function. Handles Exceptions if they come up. *)
+and eval_expr_exp (ex: expr) (state: program_state) : value =
     match eval_expr ex state with
       | Exception(e) -> print_endline "";
                         print_endline ("Exception at statement " ^ Int.to_string state.ip ^ ":");
-                        print_endline e; 
-                        raise (Failure "Program failed.")
-      | x -> if print_values then value_to_output x else ()
+                        print_endline e
+                      ; raise (Failure "Program failed.")
+      | x -> x
+
+and eval_expr_top ?(print_values:bool=false) (ex: expr) (state: program_state) : unit = 
+    (* Top-level evaluation function. Handles Exceptions if they come up. *)
+    let x = eval_expr_exp ex state in
+    if print_values then value_to_output x else ()
 
 
 

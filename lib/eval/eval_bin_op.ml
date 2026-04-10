@@ -27,6 +27,10 @@ let implicit_casting (val1: value) (val2: value) : (value * value) =
       | (IntV x1, ListV x2) -> (IntV x1, ListV x2)
       | (ListV x1, BoolV x2) -> (ListV x1, IntV (if x2 then 1 else 0))
       | (BoolV x1, ListV x2) -> (IntV (if x1 then 1 else 0), ListV x2)
+      | (ListV x1, x2) -> (ListV x1, x2)
+      | (x1, ListV x2) -> (x1, ListV x2)
+      | (DictV x1, x2) -> (DictV x1, x2)
+      | (x1, DictV x2) -> (x1, DictV x2)
       (* Pass on exceptions *)
       | (Exception e1, x) -> (Exception e1, x)
       | (x, Exception e2) -> (x, Exception e2)
@@ -50,6 +54,7 @@ let eval_int_op (x1: int) (op: bin_op) (x2: int) : value =
       | Mod -> if x2 = 0 then Exception "ZeroDivisionError: integer modulo by zero" else IntV(x1 % x2)
       | And -> IntV(max x1 x2)
       | Or -> IntV(min x1 x2)
+      | _ -> Exception "Operation not supported for type int"
 
 
 let eval_float_op (x1: float) (op: bin_op) (x2: float) : value = 
@@ -68,6 +73,7 @@ let eval_float_op (x1: float) (op: bin_op) (x2: float) : value =
       | Mod -> if x2 = 0.0 then Exception "ZeroDivisionError: float modulo by zero" else FloatV(Float.mod_float x1 x2)
       | And -> FloatV(Float.max x1 x2)
       | Or -> FloatV(Float.min x1 x2)
+      | _ -> Exception "Operation not supported for type float"
 
 
 let eval_string_op (x1: string) (op: bin_op) (x2: string) : value = 
@@ -96,13 +102,40 @@ let eval_list_op (x1: value list) (op: bin_op) (x2: value): value =
       | ListV l -> (
           match op with
             | Add -> ListV (x1 @ l)
+            | In -> (match List.find l ~f:(fun x -> value_equals x (ListV x1)) with
+                   | Some(_) -> BoolV true
+                   | None -> BoolV false
+                  )
             | _ -> Exception "Operation not supported for type list"
           )
       | IntV x -> (
           match op with
             | Mul -> ListV (List.concat (List.init x ~f:(fun _ -> x1)))
+            | In -> (match List.find x1 ~f:(fun x -> value_equals x x2) with
+                   | Some(_) -> BoolV true
+                   | None -> BoolV false
+                  )
             | _ -> Exception "Operation not supported for type list"
           )
-      | _ -> Exception "Operation not supported for type list"
+      | _ -> ( 
+            match op with
+              | In -> (match List.find x1 ~f:(fun x -> value_equals x x2) with
+                       | Some(_) -> BoolV true
+                       | None -> BoolV false
+                      )
+              | _ -> Exception "Operation not supported for type list"
+          )
+
+let eval_dict_op (v1: value) (op: bin_op) (v2: value) : value =
+    match op with
+      | In -> (match v2 with 
+                | DictV d -> (match Hashtbl.find d (value_to_str ~add_paren:true v1) with
+                                | Some(x) -> BoolV true
+                                | None -> BoolV false
+                )
+                | _ -> Exception "Operation 'in' not supported for these types"
+            )
+      | _ -> Exception "Operation not supported for type dict"
 
             
+

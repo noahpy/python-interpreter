@@ -108,7 +108,8 @@ stmts:
 (* ---- SIMPLE STATEMENTS ---- *)
 
 simple_stmt:
-  | name = IDENT; EQUALS; x = expr   { Assign (name, x) }
+  | name = IDENT; EQUALS; x = expr   { Assign (name, x, None) }
+  | name = IDENT; LBRACKET; i = expr; RBRACKET; EQUALS; x = expr   { Assign (name, x, Some i) }
   | RETURN; e = option(expr)          { match e with Some(e) -> Return e | _ -> Return (Value(Ntwo)) }
   | PASS                              { Pass }
   | e = expr                          { Expr e }
@@ -169,11 +170,11 @@ expr:
   | a = expr; LTE; b = expr                                               { Bin_Exp (a, Leq, b) }
   | a = expr; GTE; b = expr                                               { Bin_Exp (a, Geq, b) }
   | NOT; e = expr                                                          { Bin_Exp (Value(BoolV true), Neq, e) }
+  | a = expr; IN; b = expr                                                { Bin_Exp (a, In, b) }
   | LBRACKET; elts = separated_list(COMMA, expr); RBRACKET                { ListE elts }
   | LPAREN; e = expr; RPAREN                                              { e }
   | a = expr; LBRACKET; i = expr; RBRACKET                                 { AccessE(a, i) }
-  (* | LBRACE; entries = separated_list(COMMA, dict_entry); RBRACE *)
-  (*   { DictExpr entries } *)
+  | LBRACE; entries = separated_list(COMMA, dict_entry); RBRACE            { DictE entries }
 
 (* Values — the leaves of the expression tree *)
 values:
@@ -186,5 +187,5 @@ values:
   | MINUS; n = INT %prec UMINUS                    { Value (IntV (-n)) }
   | MINUS; f = FLOAT %prec UMINUS                  { Value (FloatV (-.f)) }
 
-(* dict_entry: *)
-(*   | k = expr; COLON; v = expr                      { (k, v) } *)
+dict_entry:
+  | k = expr; COLON; v = expr                      { (k, v) }

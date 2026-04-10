@@ -30,15 +30,16 @@ print(l)
     [%expect {|
       Program IR:
       ((program
-        ((Assign (x (Bin_Exp ((Value (IntV 10)) Add (Value (IntV 3))))))
-         (Assign (y (Bin_Exp ((Value (FloatV 1.3)) Mul (Value (IntV 2))))))
-         (Assign (x (Bin_Exp ((Var_Ref x) Add (Var_Ref y)))))
+        ((Assign (x (Bin_Exp ((Value (IntV 10)) Add (Value (IntV 3)))) ()))
+         (Assign (y (Bin_Exp ((Value (FloatV 1.3)) Mul (Value (IntV 2)))) ()))
+         (Assign (x (Bin_Exp ((Var_Ref x) Add (Var_Ref y))) ()))
          (Assign
           (l
            (ListE
             ((Bin_Exp ((Value (IntV 10)) Add (Value (IntV 4))))
              (Bin_Exp ((Value (StringV wow)) Add (Value (StringV hu))))
-             (Var_Ref x)))))
+             (Var_Ref x)))
+           ()))
          (Expr (Func_App (print ((Var_Ref l)))))))
        (ip 0)
        (variables
@@ -51,7 +52,7 @@ print(l)
          (range ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (str ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))))
        (local_variables ()))
-      [14, wowhu, 15.6]
+      [14, "wowhu", 15.6]
       |}]
 
 let%expect_test "Interpret program with list arithmetics" =
@@ -64,14 +65,15 @@ print(l)
     [%expect {|
       Program IR:
       ((program
-        ((Assign (x (Value (IntV 3))))
+        ((Assign (x (Value (IntV 3)) ()))
          (Assign
           (l
            (Bin_Exp
             ((Bin_Exp
               ((Var_Ref x) Mul
                (ListE ((Value (IntV 1)) (Value (IntV 2)) (Value (IntV 3))))))
-             Add (ListE ((Value (IntV 4)) (Value (IntV 5)) (Value (IntV 6))))))))
+             Add (ListE ((Value (IntV 4)) (Value (IntV 5)) (Value (IntV 6))))))
+           ()))
          (Expr (Func_App (print ((Var_Ref l)))))))
        (ip 0)
        (variables
@@ -318,7 +320,11 @@ f(0)
 print(y)
 |} in
     interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
-    [%expect {| changed! |}]
+    [%expect {|
+      Exception at statement 2:
+      NameError: name 'y' is not defined
+      Error: Program failed.
+      |}]
 
 
 let%expect_test "Wrong indentation should create an error" =
@@ -479,3 +485,85 @@ print(len(3.14159))
       TypeError: object of type '(FloatV 3.14159)' has no len()
       Error: Program failed.
       |}]
+
+let%expect_test "Test list and dict access" =
+    let program = {|
+d = {}
+
+d[1] = 4
+d[2] = 5
+d[3] = 6
+d["test"] = 7
+
+print(d)
+print(1 in d)
+print(6 in d)
+print("test" in d)
+print("test" in {"nope": 1})
+
+l = [1, 2, 3, "wow"]
+print("\n", l)
+print(1 in l)
+print(6 in l)
+print(6 in [1, 2, 3, "wow"])
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      {2 : 5, "test" : 7, 3 : 6, 1 : 4}
+      True
+      False
+      True
+      False
+
+       [1, 2, 3, "wow"]
+      True
+      False
+      False
+      |}]
+
+let%expect_test "Test list and dict access (2)" =
+    let program = {|
+
+d = {}
+
+d[1] = 4
+d[2] = 5
+d[3] = 6
+d["test"] = 7
+
+print(d)
+print(1 in d, 6 in d, "test" in d)
+print("test" in {"nope": 1})
+
+l = [1, 2, 3, "wow"]
+print("\n", l)
+print(1 in l, 2 in l, "wow" in l)
+print("test" in ["nope", False])
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      {2 : 5, "test" : 7, 3 : 6, 1 : 4}
+      True False True
+      False
+
+       [1, 2, 3, "wow"]
+      True True True
+      False
+      |}]
+
+let%expect_test "Test list and dict access (3)" =
+    let program = {|
+d = {1: "t", "jesus": True, False: 3.14, 3.14: "pi", "pi": 3.14, 3: "three", []: {"dict inside dict": True}, None: None}
+
+print(d[1], d["jesus"], d[False], d[3.14], d["pi"], d[3], d[[]], d[None])
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {| t True 3.14 pi 3.14 three {"dict inside dict" : True} None |}]
+
+let%expect_test "Test list and dict access (4)" =
+    let program = {|
+l = [1, 2, "3", "4", True, False, ["wow", "cool"]]
+print(l[0], l[4], l[-1], ["wow", "cool"] in l)
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {| 1 True ["wow", "cool"] True |}]

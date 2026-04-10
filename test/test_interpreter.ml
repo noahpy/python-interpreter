@@ -7,9 +7,9 @@ module Eval = Python_interpreter.Eval.Eval_ex
 module Utils = Python_interpreter.Utils
 
 let%expect_test "interpret print after self-referencing variable assignment" = 
-    let line1 = Assign("x", Bin_Exp(Value(FloatV 10.0), Div, Bin_Exp(Value(IntV 2), Mul, Value(IntV 3)))) in
-    let line2 = Assign("y", Var_Ref("x")) in
-    let line3 = Assign("x", Var_Ref("y")) in
+    let line1 = Assign("x", Bin_Exp(Value(FloatV 10.0), Div, Bin_Exp(Value(IntV 2), Mul, Value(IntV 3))), None) in
+    let line2 = Assign("y", Var_Ref("x"), None) in
+    let line3 = Assign("x", Var_Ref("y"), None) in
     let line4 = Expr(Func_App("print", [Value(IntV 10); Var_Ref("x")])) in
     let p = Interpreter.init_program_state [line1; line2; line3; line4] in
     Python_interpreter.Python_stdlib.Io.load_impls p;
@@ -22,8 +22,9 @@ let%expect_test "interpret print after self-referencing variable assignment" =
           (x
            (Bin_Exp
             ((Value (FloatV 10)) Div
-             (Bin_Exp ((Value (IntV 2)) Mul (Value (IntV 3))))))))
-         (Assign (y (Var_Ref x))) (Assign (x (Var_Ref y)))
+             (Bin_Exp ((Value (IntV 2)) Mul (Value (IntV 3))))))
+           ()))
+         (Assign (y (Var_Ref x) ())) (Assign (x (Var_Ref y) ()))
          (Expr (Func_App (print ((Value (IntV 10)) (Var_Ref x)))))))
        (ip 0)
        (variables
@@ -48,10 +49,10 @@ let%expect_test "interpret print after defining custom add function with overlap
         Utils.Hash_utils.remove_variable state "x";
         Utils.Hash_utils.remove_variable state "y";
         Ok()
-    in let line1 = Assign("y", Value(IntV(1))) in
-    let line2 = Assign("x", Value(IntV(2))) in
+    in let line1 = Assign("y", Value(IntV(1)), None) in
+    let line2 = Assign("x", Value(IntV(2)), None) in
     let line3 = Func_Def("add", f, f_on, f_off)in
-    let line4 = Assign("res", Func_App("add", [Var_Ref("y"); Var_Ref("x")])) in
+    let line4 = Assign("res", Func_App("add", [Var_Ref("y"); Var_Ref("x")]), None) in
     let line5 = Expr(Func_App("print", [Var_Ref("res"); Var_Ref("x"); Var_Ref("y")])) in
     let lines = [line1; line2; line3; line4; line5] in 
     let p = init_program_state lines in
@@ -61,11 +62,11 @@ let%expect_test "interpret print after defining custom add function with overlap
     print_s [%sexp (p: program_state)];
     [%expect {|
       ((program
-        ((Assign (y (Value (IntV 1)))) (Assign (x (Value (IntV 2))))
+        ((Assign (y (Value (IntV 1)) ())) (Assign (x (Value (IntV 2)) ()))
          (Func_Def
           (add (Func_Stat ((Return (Bin_Exp ((Var_Ref x) Add (Var_Ref y))))))
            <opaque> <opaque>))
-         (Assign (res (Func_App (add ((Var_Ref y) (Var_Ref x))))))
+         (Assign (res (Func_App (add ((Var_Ref y) (Var_Ref x)))) ()))
          (Expr (Func_App (print ((Var_Ref res) (Var_Ref x) (Var_Ref y)))))))
        (ip 0)
        (variables
@@ -81,20 +82,20 @@ let%expect_test "interpret print after defining custom add function with overlap
       |}]
 
 let%expect_test "interpret print of list arithmetic" = 
-    let line1 = Assign("x", ListE([Value(StringV "hello"); Value(StringV "world")])) in
-    let line2 = Assign("y", Value(IntV 2)) in
-    let line3 = Assign("z", Value(ListV([IntV 2; IntV 3]))) in
+    let line1 = Assign("x", ListE([Value(StringV "hello"); Value(StringV "world")]), None) in
+    let line2 = Assign("y", Value(IntV 2), None) in
+    let line3 = Assign("z", Value(ListV([IntV 2; IntV 3])), None) in
     let line4 = Expr(Func_App("print", [Bin_Exp(Var_Ref("z"), Add, (Bin_Exp(Var_Ref("x"), Mul, Var_Ref("y"))))])) in
     let p = Interpreter.init_program_state [line1; line2; line3; line4] in
     Python_interpreter.Python_stdlib.Io.load_impls p;
     interpret_ir p;
-    [%expect {| [2, 3, hello, world, hello, world] |}];
+    [%expect {| [2, 3, "hello", "world", "hello", "world"] |}];
     print_s [%sexp (p: program_state)];
     [%expect {|
       ((program
-        ((Assign (x (ListE ((Value (StringV hello)) (Value (StringV world))))))
-         (Assign (y (Value (IntV 2))))
-         (Assign (z (Value (ListV ((IntV 2) (IntV 3))))))
+        ((Assign (x (ListE ((Value (StringV hello)) (Value (StringV world)))) ()))
+         (Assign (y (Value (IntV 2)) ()))
+         (Assign (z (Value (ListV ((IntV 2) (IntV 3)))) ()))
          (Expr
           (Func_App
            (print
@@ -115,17 +116,17 @@ let%expect_test "interpret print after defining custom function with multiple st
         Ok()
     in let f =
         Func_Stat [
-                   Assign("x", Bin_Exp(Var_Ref("x"), Add, Var_Ref("y")));
+                   Assign("x", Bin_Exp(Var_Ref("x"), Add, Var_Ref("y")), None);
                    Return(Bin_Exp(Var_Ref("x"), Add, Var_Ref("y")))
                   ]
     in let f_off state =
         Utils.Hash_utils.remove_variable state "x";
         Utils.Hash_utils.remove_variable state "y";
         Ok()
-    in let line1 = Assign("y", Value(IntV(1))) in
-    let line2 = Assign("x", Value(IntV(2))) in
+    in let line1 = Assign("y", Value(IntV(1)), None) in
+    let line2 = Assign("x", Value(IntV(2)), None) in
     let line3 = Func_Def("add", f, f_on, f_off)in
-    let line4 = Assign("res", Func_App("add", [Var_Ref("y"); Var_Ref("x")])) in
+    let line4 = Assign("res", Func_App("add", [Var_Ref("y"); Var_Ref("x")]), None) in
     let line5 = Expr(Func_App("print", [Var_Ref("res"); Var_Ref("x"); Var_Ref("y")])) in
     let lines = [line1; line2; line3; line4; line5] in 
     let p = init_program_state lines in
@@ -135,14 +136,14 @@ let%expect_test "interpret print after defining custom function with multiple st
     print_s [%sexp (p: program_state)];
     [%expect {|
       ((program
-        ((Assign (y (Value (IntV 1)))) (Assign (x (Value (IntV 2))))
+        ((Assign (y (Value (IntV 1)) ())) (Assign (x (Value (IntV 2)) ()))
          (Func_Def
           (add
            (Func_Stat
-            ((Assign (x (Bin_Exp ((Var_Ref x) Add (Var_Ref y)))))
+            ((Assign (x (Bin_Exp ((Var_Ref x) Add (Var_Ref y))) ()))
              (Return (Bin_Exp ((Var_Ref x) Add (Var_Ref y))))))
            <opaque> <opaque>))
-         (Assign (res (Func_App (add ((Var_Ref y) (Var_Ref x))))))
+         (Assign (res (Func_App (add ((Var_Ref y) (Var_Ref x)))) ()))
          (Expr (Func_App (print ((Var_Ref res) (Var_Ref x) (Var_Ref y)))))))
        (ip 0)
        (variables
@@ -150,7 +151,7 @@ let%expect_test "interpret print after defining custom function with multiple st
           ((Value
             (Function
              ((Func_Stat
-               ((Assign (x (Bin_Exp ((Var_Ref x) Add (Var_Ref y)))))
+               ((Assign (x (Bin_Exp ((Var_Ref x) Add (Var_Ref y))) ()))
                 (Return (Bin_Exp ((Var_Ref x) Add (Var_Ref y))))))
               <opaque> <opaque>)))))
          (input ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))

@@ -39,6 +39,7 @@ and value =
     | StringV of string
     | BoolV of bool
     | ListV of value list
+    | DictV of value Hashtbl.M(String).t
     | Ntwo
     | Exception of string
     | Function of (func_unapp * func_oncall * func_offcall)
@@ -58,6 +59,7 @@ and bin_op =
     | Equal
     | Neq
     | Mod
+    | In
 [@@deriving sexp]
 
 and expr = 
@@ -66,12 +68,13 @@ and expr =
     | Var_Ref of string
     | Func_App of (string * expr list)
     | ListE of expr list
+    | DictE of (expr * expr) list
     | AccessE of (expr * expr)
 [@@deriving sexp]
 
 and statement =
     | Expr of expr
-    | Assign of (string * expr)
+    | Assign of (string * expr * expr option)
     | Return of expr
     | Func_Def of (string * func_unapp * func_oncall * func_offcall)
     | If of (expr * statement list * statement list)
@@ -105,18 +108,20 @@ let rec value_to_output (val_x: value) : unit =
       | Exception x -> print_endline x
       | Ntwo -> print_endline "None"
       | Function f -> print_endline "Function"
-      | ListV x -> printf "[%s]\n" (String.concat ~sep:", " (List.map x ~f:value_to_str))
+      | ListV x -> printf "[%s]\n" (String.concat ~sep:", " (List.map x ~f:(fun x -> value_to_str x)))
+      | DictV h -> printf "{%s}\n" (String.concat ~sep:", " (List.map (Hashtbl.to_alist h) ~f:(fun (k, v) -> k^" : "^value_to_str v)))
 
-and value_to_str (val_x: value) : string = 
+and value_to_str ?(add_paren: bool = false) (val_x: value) : string = 
     match val_x with
       | IntV x -> Int.to_string x
       | FloatV x -> Float.to_string x
-      | StringV x -> x
+      | StringV x -> if add_paren then "\""^x^"\"" else x
       | BoolV x -> if x then "True" else "False"
       | Exception x -> x
       | Ntwo -> "None"
       | Function f -> "Function"
-      | ListV x -> "[" ^ String.concat ~sep:", " (List.map x ~f:value_to_str) ^ "]"
+      | ListV x -> "[" ^ String.concat ~sep:", " (List.map x ~f:(fun x -> value_to_str ~add_paren:true x)) ^ "]"
+      | DictV h -> "{" ^ String.concat ~sep:", " (List.map (Hashtbl.to_alist h) ~f:(fun (k, v) -> k^" : "^value_to_str ~add_paren:true v)) ^ "}"
 
 and expr_to_str (exp: expr) : string =
     let bin_op_to_str (op: bin_op) : string =
@@ -134,6 +139,7 @@ and expr_to_str (exp: expr) : string =
           | Equal -> "=="
           | Neq -> "!="
           | Mod -> "%"
+          | In -> "in"
     in 
     match exp with
       | Value x -> value_to_str x
@@ -142,9 +148,22 @@ and expr_to_str (exp: expr) : string =
       | Func_App (x, args) -> x ^ "(" ^ String.concat ~sep:", " (List.map args ~f:expr_to_str) ^ ")"
       | ListE x -> "[" ^ String.concat ~sep:", " (List.map x ~f:expr_to_str) ^ "]"
       | AccessE (x1, x2) -> "(" ^ (expr_to_str x1) ^ "[" ^ (expr_to_str x2) ^ "]"
+      | DictE x -> "{" ^ String.concat ~sep:", " (List.map x ~f:(fun (k, v) -> (expr_to_str k) ^ " : " ^ (expr_to_str v))) ^ "}"
 
-let values_to_str (vals: value list) : string = 
-    String.concat ~sep:" " (List.map vals ~f:value_to_str)
+let values_to_str ?(add_paren: bool = false) (vals: value list) : string = 
+    String.concat ~sep:" " (List.map vals ~f:(fun x -> value_to_str ~add_paren:add_paren x))
 
 let exprs_to_str (exprs: expr list) : string = 
     String.concat ~sep:" " (List.map exprs ~f:expr_to_str)
+
+let rec value_equals (v1:value) (v2:value) : bool = 
+    match v1, v2 with
+      | IntV x1, IntV x2 -> x1 = x2
+      | FloatV x1, FloatV x2 -> Float.equal x1 x2
+      | StringV x1, StringV x2 -> String.equal x1 x2
+      | BoolV x1, BoolV x2 -> Bool.equal x1 x2
+      | Ntwo, Ntwo -> true
+      | Exception x1, Exception x2 -> String.equal x1 x2
+      | ListV x1, ListV x2 -> List.for_all2_exn x1 x2 ~f:value_equals
+      | DictV x1, DictV x2 -> Hashtbl.equal value_equals x1 x2
+      | _ -> false

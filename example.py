@@ -1,4 +1,5 @@
 
+# this comment is supported
 
 def faculty(n):
     if n == 0:
@@ -10,12 +11,19 @@ def faculty(n):
         return n * faculty(n - 1)
 
 
-def many_faculties(n, f):
+def many_faculties_memoize(n, f):
     res = []
+    mem = {}
     for i in range(n):
+        if i in mem:
+            tmp = mem[i]
+        else:
+            tmp = f(i)
+            mem[i] = tmp
         res = res + [f(i)]
     return res
 
-num_computations = int(input("Enter a number: "))
-final_result = many_faculties(num_computations, faculty)
+
+num_computations = 10
+final_result = many_faculties_memoize(num_computations, faculty)
 print(final_result)

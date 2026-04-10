@@ -410,7 +410,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (FloatV 2.5) Add (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Add (IntV 10)
@@ -430,7 +430,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Add (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (BoolV true) Add (IntV 10)
@@ -470,7 +470,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: Ntwo Add (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Add (IntV 10)
@@ -478,11 +478,11 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Add (FloatV 2.5)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Add (StringV abc)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Add (BoolV true)
@@ -490,7 +490,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Add Ntwo
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (IntV 10) Mul (FloatV 2.5)
@@ -530,7 +530,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (FloatV 2.5) Mul (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Mul (IntV 10)
@@ -550,7 +550,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Mul (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (BoolV true) Mul (IntV 10)
@@ -590,7 +590,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: Ntwo Mul (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Mul (IntV 10)
@@ -598,11 +598,11 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Mul (FloatV 2.5)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Mul (StringV abc)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Mul (BoolV true)
@@ -610,7 +610,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Mul Ntwo
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (IntV 10) Sub (FloatV 2.5)
@@ -650,7 +650,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (FloatV 2.5) Sub (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Sub (IntV 10)
@@ -670,7 +670,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Sub (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (BoolV true) Sub (IntV 10)
@@ -710,7 +710,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: Ntwo Sub (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Sub (IntV 10)
@@ -718,11 +718,11 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Sub (FloatV 2.5)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Sub (StringV abc)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Sub (BoolV true)
@@ -730,7 +730,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Sub Ntwo
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (IntV 10) Div (FloatV 2.5)
@@ -770,7 +770,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (FloatV 2.5) Div (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Div (IntV 10)
@@ -790,7 +790,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Div (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (BoolV true) Div (IntV 10)
@@ -830,7 +830,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: Ntwo Div (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Div (IntV 10)
@@ -838,11 +838,11 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Div (FloatV 2.5)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Div (StringV abc)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Div (BoolV true)
@@ -850,7 +850,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Div Ntwo
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (IntV 10) And (FloatV 2.5)
@@ -890,7 +890,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (FloatV 2.5) And (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) And (IntV 10)
@@ -910,7 +910,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) And (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (BoolV true) And (IntV 10)
@@ -950,7 +950,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: Ntwo And (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) And (IntV 10)
@@ -958,11 +958,11 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) And (FloatV 2.5)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) And (StringV abc)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) And (BoolV true)
@@ -970,7 +970,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) And Ntwo
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (IntV 10) Or (FloatV 2.5)
@@ -1010,7 +1010,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (FloatV 2.5) Or (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Or (IntV 10)
@@ -1030,7 +1030,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Or (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (BoolV true) Or (IntV 10)
@@ -1070,7 +1070,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: Ntwo Or (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Or (IntV 10)
@@ -1078,11 +1078,11 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Or (FloatV 2.5)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Or (StringV abc)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Or (BoolV true)
@@ -1090,7 +1090,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Or Ntwo
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (IntV 10) Less (FloatV 2.5)
@@ -1130,7 +1130,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (FloatV 2.5) Less (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Less (IntV 10)
@@ -1150,7 +1150,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Less (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (BoolV true) Less (IntV 10)
@@ -1190,7 +1190,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: Ntwo Less (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Less (IntV 10)
@@ -1198,11 +1198,11 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Less (FloatV 2.5)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Less (StringV abc)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Less (BoolV true)
@@ -1210,7 +1210,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Less Ntwo
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (IntV 10) Greater (FloatV 2.5)
@@ -1250,7 +1250,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (FloatV 2.5) Greater (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Greater (IntV 10)
@@ -1270,7 +1270,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Greater (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (BoolV true) Greater (IntV 10)
@@ -1310,7 +1310,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: Ntwo Greater (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Greater (IntV 10)
@@ -1318,11 +1318,11 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Greater (FloatV 2.5)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Greater (StringV abc)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Greater (BoolV true)
@@ -1330,7 +1330,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Greater Ntwo
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (IntV 10) Leq (FloatV 2.5)
@@ -1370,7 +1370,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (FloatV 2.5) Leq (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Leq (IntV 10)
@@ -1390,7 +1390,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Leq (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (BoolV true) Leq (IntV 10)
@@ -1430,7 +1430,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: Ntwo Leq (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Leq (IntV 10)
@@ -1438,11 +1438,11 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Leq (FloatV 2.5)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Leq (StringV abc)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Leq (BoolV true)
@@ -1450,7 +1450,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Leq Ntwo
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (IntV 10) Geq (FloatV 2.5)
@@ -1490,7 +1490,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (FloatV 2.5) Geq (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Geq (IntV 10)
@@ -1510,7 +1510,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Geq (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (BoolV true) Geq (IntV 10)
@@ -1550,7 +1550,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: Ntwo Geq (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Geq (IntV 10)
@@ -1558,11 +1558,11 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Geq (FloatV 2.5)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Geq (StringV abc)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Geq (BoolV true)
@@ -1570,7 +1570,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Geq Ntwo
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (IntV 10) Equal (FloatV 2.5)
@@ -1610,7 +1610,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (FloatV 2.5) Equal (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Equal (IntV 10)
@@ -1630,7 +1630,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Equal (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (BoolV true) Equal (IntV 10)
@@ -1670,7 +1670,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: Ntwo Equal (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Equal (IntV 10)
@@ -1678,11 +1678,11 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Equal (FloatV 2.5)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Equal (StringV abc)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Equal (BoolV true)
@@ -1690,7 +1690,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Equal Ntwo
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (IntV 10) Neq (FloatV 2.5)
@@ -1730,7 +1730,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (FloatV 2.5) Neq (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Neq (IntV 10)
@@ -1750,7 +1750,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (StringV abc) Neq (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (BoolV true) Neq (IntV 10)
@@ -1790,7 +1790,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: Ntwo Neq (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true)))
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Neq (IntV 10)
@@ -1798,11 +1798,11 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Neq (FloatV 2.5)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Neq (StringV abc)
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Neq (BoolV true)
@@ -1810,7 +1810,7 @@ let%expect_test "eval_bin_op: all cross-type combinations" =
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       Input: (ListV((IntV 1)(FloatV 2.5)(StringV abc)(BoolV true))) Neq Ntwo
-      Result: (Exception"We do not support this implicit type conversion.\nand\n")
+      Result: (Exception"Operation not supported for type list")
       State: ((program())(ip 0)(variables())(local_variables()))
       -----------------------
       |}]
