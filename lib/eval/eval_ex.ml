@@ -253,6 +253,19 @@ and eval_for (var: string) (iter: expr) (body: statement list)
             let _ = eval_program {prog with program = body} in
             ()
         )
+      | StringV s ->
+        String.iter s ~f:(fun c ->
+            Hash_utils.replace_variable prog var (Value (StringV (String.of_char c)));
+            let _ = eval_program {prog with program = body} in
+            ()
+        )
+      | DictV h ->
+        let keys = Hashtbl.keys h in
+        List.iter keys ~f:(fun k ->
+            Hash_utils.replace_variable prog var (Value (StringV k));
+            let _ = eval_program {prog with program = body} in
+            ()
+        )
       | _ -> raise (Failure "TypeError: object is not iterable")
 
 and eval_fundef (name: string) (params: string list) (body: statement list)
