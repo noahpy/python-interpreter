@@ -174,8 +174,18 @@ expr:
   | a = expr; NOTIN; b = expr                                                { Bin_Exp(Value(BoolV true), Neq, Bin_Exp (a, In, b)) }
   | LBRACKET; elts = separated_list(COMMA, expr); RBRACKET                { ListE elts }
   | LPAREN; e = expr; RPAREN                                              { e }
-  | a = expr; LBRACKET; i = expr; RBRACKET                                 { AccessE(a, i) }
+  | a = expr; LBRACKET; s = subscript; RBRACKET                            { AccessE(a, s) }
   | LBRACE; entries = separated_list(COMMA, dict_entry); RBRACE            { DictE entries }
+
+(* A subscript inside [...] is either a plain index or a slice. *)
+subscript:
+  | i = expr                                                                              { i }
+  | s1 = slice_part; COLON; s2 = slice_part                                               { SliceE(s1, s2, None) }
+  | s1 = slice_part; COLON; s2 = slice_part; COLON; s3 = slice_part                       { SliceE(s1, s2, s3) }
+
+slice_part:
+  | (* empty *)                                    { None }
+  | e = expr                                       { Some e }
 
 (* Values — the leaves of the expression tree *)
 values:

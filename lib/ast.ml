@@ -62,7 +62,7 @@ and bin_op =
     | In
 [@@deriving sexp]
 
-and expr = 
+and expr =
     | Value of value
     | Bin_Exp of (expr * bin_op * expr)
     | Var_Ref of string
@@ -70,6 +70,7 @@ and expr =
     | ListE of expr list
     | DictE of (expr * expr) list
     | AccessE of (expr * expr)
+    | SliceE of (expr option * expr option * expr option)
 [@@deriving sexp]
 
 and statement =
@@ -149,6 +150,11 @@ and expr_to_str (exp: expr) : string =
       | ListE x -> "[" ^ String.concat ~sep:", " (List.map x ~f:expr_to_str) ^ "]"
       | AccessE (x1, x2) -> "(" ^ (expr_to_str x1) ^ "[" ^ (expr_to_str x2) ^ "]"
       | DictE x -> "{" ^ String.concat ~sep:", " (List.map x ~f:(fun (k, v) -> (expr_to_str k) ^ " : " ^ (expr_to_str v))) ^ "}"
+      | SliceE (s, e, st) ->
+          let part = function None -> "" | Some x -> expr_to_str x in
+          (match st with
+             | None -> (part s) ^ ":" ^ (part e)
+             | Some _ -> (part s) ^ ":" ^ (part e) ^ ":" ^ (part st))
 
 let values_to_str ?(add_paren: bool = false) (vals: value list) : string = 
     String.concat ~sep:" " (List.map vals ~f:(fun x -> value_to_str ~add_paren:add_paren x))

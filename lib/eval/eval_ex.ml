@@ -14,6 +14,7 @@ let rec eval_expr (ex: expr) (state: program_state): value =
       | ListE(expressions) -> eval_list expressions state
       | AccessE(ex1, ex2) -> eval_access ex1 ex2 state
       | DictE(pairs) -> eval_dict pairs state
+      | SliceE(_, _, _) -> Exception "SyntaxError: slice expression outside of subscript"
       (* | _ -> Exception "Not implemented yet." *)
 
 and eval_bin_op (ex1: expr) (op: bin_op) (ex2: expr) (state: program_state) : value =
@@ -94,6 +95,9 @@ and eval_list (exs: expr list) (state: program_state) : value =
 
 and eval_access (accessed: expr) (key: expr) (state: program_state) : value =
     let accessed_val = eval_expr accessed state in
+    match key with
+      | SliceE(s, e, st) -> eval_slice accessed_val s e st state
+      | _ ->
     let key_val = eval_expr key state in
     match accessed_val with
       | ListV l -> (
@@ -121,7 +125,73 @@ and eval_access (accessed: expr) (key: expr) (state: program_state) : value =
                           | None -> Exception("IndexError: string index out of range")
                         )
             | _ -> Exception ("TypeError: string indices must be integers, not " ^ Sexp.to_string (sexp_of_value key_val))
-      ) 
+      )
+      | x -> Exception (String.concat ["TypeError: ";Sexp.to_string (sexp_of_value x);" object is not subscriptable."])
+
+and eval_slice (accessed_val: value) (start: expr option) (stop: expr option)
+               (step: expr option) (state: program_state) : value =
+    (* Evaluate an optional slice component to (int option, error). *)
+    let eval_opt (e: expr option) : (int option, string) Result.t =
+        match e with
+          | None -> Ok None
+          | Some(ex) -> (match eval_expr ex state with
+                          | IntV i -> Ok (Some i)
+                          | Exception s -> Error s
+                          | v -> Error ("TypeError: slice indices must be integers or None, not "
+                                        ^ Sexp.to_string (sexp_of_value v)))
+    in
+    (* Compute Python-style (start, stop, step) clamped indices for a sequence of given length. *)
+    let compute_indices (length: int) : (int * int * int, string) Result.t =
+        match eval_opt start, eval_opt stop, eval_opt step with
+          | Error e, _, _ | _, Error e, _ | _, _, Error e -> Error e
+          | Ok s, Ok e, Ok st ->
+              let step_v = Option.value st ~default:1 in
+              if step_v = 0 then Error "ValueError: slice step cannot be zero"
+              else
+                  let lower, upper =
+                      if step_v > 0 then 0, length else -1, length - 1
+                  in
+                  let normalize x =
+                      let x = if x < 0 then x + length else x in
+                      if x < lower then lower
+                      else if x > upper then upper
+                      else x
+                  in
+                  let start_v = match s with
+                    | None -> if step_v < 0 then upper else lower
+                    | Some v -> normalize v
+                  in
+                  let stop_v = match e with
+                    | None -> if step_v < 0 then lower else upper
+                    | Some v -> normalize v
+                  in
+                  Ok (start_v, stop_v, step_v)
+    in
+    let do_slice (type a) (items: a array) (length: int) : (a list, string) Result.t =
+        match compute_indices length with
+          | Error e -> Error e
+          | Ok (start_v, stop_v, step_v) ->
+              let rec gen i acc =
+                  if (step_v > 0 && i >= stop_v) || (step_v < 0 && i <= stop_v) then
+                      List.rev acc
+                  else if i < 0 || i >= length then List.rev acc
+                  else gen (i + step_v) (items.(i) :: acc)
+              in Ok (gen start_v [])
+    in
+    match accessed_val with
+      | ListV l -> (
+          let arr = Array.of_list l in
+          match do_slice arr (Array.length arr) with
+            | Ok xs -> ListV xs
+            | Error e -> Exception e
+          )
+      | StringV s -> (
+          let arr = String.to_array s in
+          match do_slice arr (Array.length arr) with
+            | Ok xs -> StringV (String.of_char_list xs)
+            | Error e -> Exception e
+          )
+      | Exception e -> Exception e
       | x -> Exception (String.concat ["TypeError: ";Sexp.to_string (sexp_of_value x);" object is not subscriptable."])
 
 
@@ -246,6 +316,9 @@ and assign_var (name: string) (exp: expr) (index: expr option) (prog: program_st
           | ListE(x) -> ListE(List.map x ~f:remove_ref)
           | AccessE(x1, x2) -> AccessE(remove_ref x1, remove_ref x2)
           | DictE(x) -> DictE(List.map x ~f:(fun (k, v) -> (remove_ref k, remove_ref v)))
+          | SliceE(s, e, st) -> SliceE(Option.map s ~f:remove_ref,
+                                       Option.map e ~f:remove_ref,
+                                       Option.map st ~f:remove_ref)
     in match index with
       | Some(i) -> handle_index_assign name (remove_ref exp) i prog
       | None -> let cleaned_exp = remove_ref exp

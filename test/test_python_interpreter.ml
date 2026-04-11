@@ -609,4 +609,144 @@ print(not 15)
       False
       |}]
 
+let%expect_test "Test list slicing — basic ranges" =
+    let program = {|
+l = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+print(l[2:5])
+print(l[:4])
+print(l[6:])
+print(l[:])
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      [2, 3, 4]
+      [0, 1, 2, 3]
+      [6, 7, 8, 9]
+      [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+      |}]
+
+let%expect_test "Test list slicing — step and reverse" =
+    let program = {|
+l = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+print(l[::2])
+print(l[1:8:2])
+print(l[::-1])
+print(l[8:2:-2])
+print(l[::-3])
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      [0, 2, 4, 6, 8]
+      [1, 3, 5, 7]
+      [9, 8, 7, 6, 5, 4, 3, 2, 1, 0]
+      [8, 6, 4]
+      [9, 6, 3, 0]
+      |}]
+
+let%expect_test "Test list slicing — negative indices" =
+    let program = {|
+l = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+print(l[-3:])
+print(l[:-3])
+print(l[-5:-2])
+print(l[-1:-6:-1])
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      [7, 8, 9]
+      [0, 1, 2, 3, 4, 5, 6]
+      [5, 6, 7]
+      [9, 8, 7, 6, 5]
+      |}]
+
+let%expect_test "Test list slicing — out-of-range and empty" =
+    let program = {|
+l = [1, 2, 3, 4, 5]
+print(l[100:])
+print(l[:100])
+print(l[-100:2])
+print(l[3:1])
+print(l[1:1])
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      []
+      [1, 2, 3, 4, 5]
+      [1, 2]
+      []
+      []
+      |}]
+
+let%expect_test "Test string slicing" =
+    let program = {|
+s = "hello world"
+print(s[0:5])
+print(s[6:])
+print(s[:5])
+print(s[::-1])
+print(s[::2])
+print(s[-5:])
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      hello
+      world
+      hello
+      dlrow olleh
+      hlowrd
+      world
+      |}]
+
+let%expect_test "Test slicing with computed indices" =
+    let program = {|
+l = [10, 20, 30, 40, 50, 60]
+i = 1
+j = 5
+print(l[i:j])
+print(l[i+1:j-1])
+print(l[i:j:2])
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      [20, 30, 40, 50]
+      [30, 40]
+      [20, 40]
+      |}]
+
+let%expect_test "Test slicing — zero step error" =
+    let program = {|
+l = [1, 2, 3]
+print(l[::0])
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      Exception at statement 1:
+      ValueError: slice step cannot be zero
+      Error: Program failed.
+      |}]
+
+let%expect_test "Test slicing — non-integer index error" =
+    let program = {|
+l = [1, 2, 3]
+print(l["a":2])
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      Exception at statement 1:
+      TypeError: slice indices must be integers or None, not (StringV a)
+      Error: Program failed.
+      |}]
+
+let%expect_test "Test slicing — chained access" =
+    let program = {|
+l = [[1, 2, 3, 4], [5, 6, 7, 8], [9, 10, 11, 12]]
+print(l[1:][0])
+print(l[0][1:3])
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      [5, 6, 7, 8]
+      [2, 3]
+      |}]
+
 
