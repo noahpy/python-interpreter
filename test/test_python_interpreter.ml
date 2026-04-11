@@ -43,15 +43,21 @@ print(l)
          (Expr (Func_App (print ((Var_Ref l)))))))
        (ip 0)
        (variables
-        ((bool ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+        ((abs ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (bool ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (float ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (input ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (int ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (len ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (list ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (max ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (min ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (pow ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (print ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (range ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
-         (str ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))))
+         (sqrt ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (str ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (sum ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))))
        (local_variables ()))
       [14, "wowhu", 15.6]
       |}]
@@ -78,15 +84,21 @@ print(l)
          (Expr (Func_App (print ((Var_Ref l)))))))
        (ip 0)
        (variables
-        ((bool ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+        ((abs ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (bool ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (float ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (input ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (int ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (len ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (list ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (max ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (min ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (pow ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (print ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (range ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
-         (str ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))))
+         (sqrt ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (str ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (sum ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))))
        (local_variables ()))
       [1, 2, 3, 1, 2, 3, 1, 2, 3, 4, 5, 6]
       |}]
@@ -747,6 +759,314 @@ print(l[0][1:3])
     [%expect {|
       [5, 6, 7, 8]
       [2, 3]
+      |}]
+
+let%expect_test "Test abs()" =
+    let program = {|
+print(abs(5))
+print(abs(-5))
+print(abs(0))
+print(abs(-3.5))
+print(abs(3.5))
+print(abs(True))
+print(abs(False))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      5
+      5
+      0
+      3.5
+      3.5
+      1
+      0
+      |}]
+
+let%expect_test "Test abs() — wrong type" =
+    let program = {|
+print(abs("hello"))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      Exception at statement 0:
+      TypeError: bad operand type for abs(): 'hello'
+      Error: Program failed.
+      |}]
+
+let%expect_test "Test abs() — wrong arg count" =
+    let program = {|
+print(abs(1, 2))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      Exception at statement 0:
+      TypeError: abs takes from 1 to 1 positional arguments but 2 were given
+      Error: Program failed.
+      |}]
+
+let%expect_test "Test max()" =
+    let program = {|
+print(max([1, 2, 3]))
+print(max([3, 2, 1]))
+print(max([-1, -5, -3]))
+print(max([1.5, 2.5, 0.5]))
+print(max([1, 2.5, 3]))
+print(max(1, 2, 3, 4, 5))
+print(max(5, 4, 3, 2, 1))
+print(max(1.1, 2, 3.3))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      3
+      3
+      -1
+      2.5
+      3
+      5
+      5
+      3.3
+      |}]
+
+let%expect_test "Test max() — empty list" =
+    let program = {|
+print(max([]))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      Exception at statement 0:
+      ValueError: max() arg is an empty sequence
+      Error: Program failed.
+      |}]
+
+let%expect_test "Test max() — non-iterable single arg" =
+    let program = {|
+print(max(5))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      Exception at statement 0:
+      TypeError: '5' object is not iterable
+      Error: Program failed.
+      |}]
+
+let%expect_test "Test min()" =
+    let program = {|
+print(min([1, 2, 3]))
+print(min([3, 2, 1]))
+print(min([-1, -5, -3]))
+print(min([1.5, 2.5, 0.5]))
+print(min([1, 2.5, 3]))
+print(min(1, 2, 3, 4, 5))
+print(min(5, 4, 3, 2, 1))
+print(min(1.1, 2, 3.3))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      1
+      1
+      -5
+      0.5
+      1
+      1
+      1
+      1.1
+      |}]
+
+let%expect_test "Test min() — empty list" =
+    let program = {|
+print(min([]))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      Exception at statement 0:
+      ValueError: min() arg is an empty sequence
+      Error: Program failed.
+      |}]
+
+let%expect_test "Test min() — non-iterable single arg" =
+    let program = {|
+print(min(5))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      Exception at statement 0:
+      TypeError: '5' object is not iterable
+      Error: Program failed.
+      |}]
+
+let%expect_test "Test pow()" =
+    let program = {|
+print(pow(2, 0))
+print(pow(2, 1))
+print(pow(2, 10))
+print(pow(3, 4))
+print(pow(2, -1))
+print(pow(2, -2))
+print(pow(2.0, 3))
+print(pow(2, 3.0))
+print(pow(0, 0))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      1
+      2
+      1024
+      81
+      0.5
+      0.25
+      8.
+      8.
+      1
+      |}]
+
+let%expect_test "Test pow() — 3 args modular" =
+    let program = {|
+print(pow(2, 10, 1000))
+print(pow(3, 5, 7))
+print(pow(10, 3, 17))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      24
+      5
+      14
+      |}]
+
+let%expect_test "Test pow() — 3 args mod zero error" =
+    let program = {|
+print(pow(2, 10, 0))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      Exception at statement 0:
+      ValueError: pow() 3rd argument cannot be 0
+      Error: Program failed.
+      |}]
+
+let%expect_test "Test pow() — wrong arg count" =
+    let program = {|
+print(pow(2))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      Exception at statement 0:
+      TypeError: pow takes from 2 to 3 positional arguments but 1 were given
+      Error: Program failed.
+      |}]
+
+let%expect_test "Test sqrt()" =
+    let program = {|
+print(sqrt(0))
+print(sqrt(1))
+print(sqrt(4))
+print(sqrt(16))
+print(sqrt(2))
+print(sqrt(2.25))
+print(sqrt(True))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      0.
+      1.
+      2.
+      4.
+      1.4142135623730951
+      1.5
+      1.
+      |}]
+
+let%expect_test "Test sqrt() — negative domain error" =
+    let program = {|
+print(sqrt(-1))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      Exception at statement 0:
+      ValueError: math domain error
+      Error: Program failed.
+      |}]
+
+let%expect_test "Test sqrt() — non-numeric" =
+    let program = {|
+print(sqrt("hello"))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      Exception at statement 0:
+      TypeError: must be real number, not 'hello'
+      Error: Program failed.
+      |}]
+
+let%expect_test "Test sum()" =
+    let program = {|
+print(sum([]))
+print(sum([1, 2, 3, 4]))
+print(sum([-1, -2, -3]))
+print(sum([1.5, 2.5, 3.5]))
+print(sum([1, 2.5, 3]))
+print(sum([True, False, True, True]))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      0
+      10
+      -6
+      7.5
+      6.5
+      3
+      |}]
+
+let%expect_test "Test sum() — with start value" =
+    let program = {|
+print(sum([1, 2, 3], 10))
+print(sum([], 5))
+print(sum([1, 2, 3], 0.5))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      16
+      5
+      6.5
+      |}]
+
+let%expect_test "Test sum() — non-iterable" =
+    let program = {|
+print(sum(5))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      Exception at statement 0:
+      TypeError: 'sum()' first argument must be iterable, not '5'
+      Error: Program failed.
+      |}]
+
+let%expect_test "Test sum() — type error in elements" =
+    let program = {|
+print(sum([1, 2, "three"]))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      Exception at statement 0:
+      TypeError: unsupported operand type(s) for +: '3' and 'three'
+      Error: Program failed.
+      |}]
+
+let%expect_test "Test arith builtins composed" =
+    let program = {|
+nums = [3, 1, 4, 1, 5, 9, 2, 6]
+print(max(nums) - min(nums))
+print(sum(nums))
+print(abs(min(nums) - max(nums)))
+print(sqrt(sum([9, 16])))
+print(pow(max(nums), 2))
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      8
+      31
+      8
+      5.
+      81
       |}]
 
 

@@ -1,6 +1,7 @@
 
-let load_impls (state: Ast.program_state) : unit = 
+let load_impls (state: Ast.program_state) : unit =
     (* Load standard library functions. *)
     Io.load_impls state;
     Utilities.load_impls state;
+    Arith.load_impls state;
 
