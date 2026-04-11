@@ -43,7 +43,8 @@ print(l)
          (Expr (Func_App (print ((Var_Ref l)))))))
        (ip 0)
        (variables
-        ((float ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+        ((bool ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (float ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (input ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (int ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (len ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
@@ -77,7 +78,8 @@ print(l)
          (Expr (Func_App (print ((Var_Ref l)))))))
        (ip 0)
        (variables
-        ((float ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+        ((bool ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (float ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (input ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (int ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (len ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
@@ -563,7 +565,48 @@ print(d[1], d["jesus"], d[False], d[3.14], d["pi"], d[3], d[[]], d[None])
 let%expect_test "Test list and dict access (4)" =
     let program = {|
 l = [1, 2, "3", "4", True, False, ["wow", "cool"]]
-print(l[0], l[4], l[-1], ["wow", "cool"] in l)
+print(l[0], l[4], l[-1], ["wow", "cool"] in l, 1 not in l)
 |} in
     interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
-    [%expect {| 1 True ["wow", "cool"] True |}]
+    [%expect {| 1 True ["wow", "cool"] True False |}]
+
+let%expect_test "Test string access" =
+    let program = {|
+s = "wow hey cool"
+for i in range(len(s)):
+    print(i, s[i])
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      0 w
+      1 o
+      2 w
+      3
+      4 h
+      5 e
+      6 y
+      7
+      8 c
+      9 o
+      10 o
+      11 l
+      |}]
+
+let%expect_test "Test not" =
+    let program = {|
+print(not "wow")
+print(not [])
+print(not {})
+print(not 0.0)
+print(not 15)
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {|
+      False
+      True
+      True
+      True
+      False
+      |}]
+
+

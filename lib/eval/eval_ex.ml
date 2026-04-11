@@ -112,7 +112,17 @@ and eval_access (accessed: expr) (key: expr) (state: program_state) : value =
                             | Some(x) -> x
                             | None -> Exception("KeyError: '" ^ s ^ "' not in dictionary")
                           )
-      | x -> Exception (String.concat ["TypeError: ";Sexp.to_string (sexp_of_value x);"object is not subscriptable."])
+      | StringV s -> (
+          match key_val with
+            | IntV i -> let length = String.length s in
+                        let index = if i < 0 then length+i else i in
+                        (match List.nth (String.to_list s) index with
+                          | Some(x) -> StringV (String.of_char x)
+                          | None -> Exception("IndexError: string index out of range")
+                        )
+            | _ -> Exception ("TypeError: string indices must be integers, not " ^ Sexp.to_string (sexp_of_value key_val))
+      ) 
+      | x -> Exception (String.concat ["TypeError: ";Sexp.to_string (sexp_of_value x);" object is not subscriptable."])
 
 
 and eval_dict (pairs: (expr * expr) list) (state: program_state) : value =
@@ -220,10 +230,10 @@ and assign_var (name: string) (exp: expr) (index: expr option) (prog: program_st
               let new_val = eval_expr_exp exp prog in
               Hashtbl.set h ~key:s ~data:new_val;
             )
-          | _ -> raise (Failure ("TypeError: object " ^ name ^ " is not subscriptable"))
+          | _ -> raise (Failure ("TypeError: object " ^ name ^ " does not support item assigmnent."))
     in
-    let rec remove_self_ref (exp: expr) : expr =
-    (* Remove self-reference of variable being assigned. *)
+    let rec remove_ref (exp: expr) : expr =
+    (* Remove reference of variables, including self-reference. *)
         match exp with
           | Value(x) -> exp;
           | Var_Ref(x) -> (match Hash_utils.get_variable prog x with
@@ -231,14 +241,14 @@ and assign_var (name: string) (exp: expr) (index: expr option) (prog: program_st
                               | None -> let msg = String.concat ["NameError: name '";x;"' is not defined"]
                                         in Value(Exception(msg))
                           )
-          | Bin_Exp(x1, op, x2) -> Bin_Exp(remove_self_ref x1, op, remove_self_ref x2)
-          | Func_App(x, args) -> Func_App(x, List.map args ~f:remove_self_ref)
-          | ListE(x) -> ListE(List.map x ~f:remove_self_ref)
-          | AccessE(x1, x2) -> AccessE(remove_self_ref x1, remove_self_ref x2)
-          | DictE(x) -> DictE(List.map x ~f:(fun (k, v) -> (remove_self_ref k, remove_self_ref v)))
+          | Bin_Exp(x1, op, x2) -> Bin_Exp(remove_ref x1, op, remove_ref x2)
+          | Func_App(x, args) -> Func_App(x, List.map args ~f:remove_ref)
+          | ListE(x) -> ListE(List.map x ~f:remove_ref)
+          | AccessE(x1, x2) -> AccessE(remove_ref x1, remove_ref x2)
+          | DictE(x) -> DictE(List.map x ~f:(fun (k, v) -> (remove_ref k, remove_ref v)))
     in match index with
-      | Some(i) -> handle_index_assign name (remove_self_ref exp) i prog
-      | None -> let cleaned_exp = remove_self_ref exp
+      | Some(i) -> handle_index_assign name (remove_ref exp) i prog
+      | None -> let cleaned_exp = remove_ref exp
                 in Hash_utils.add_local_variable prog name cleaned_exp
 
 and eval_program (prog:program_state) : value =

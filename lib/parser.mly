@@ -169,8 +169,9 @@ expr:
   | a = expr; GT; b = expr                                                 { Bin_Exp (a, Greater, b) }
   | a = expr; LTE; b = expr                                               { Bin_Exp (a, Leq, b) }
   | a = expr; GTE; b = expr                                               { Bin_Exp (a, Geq, b) }
-  | NOT; e = expr                                                          { Bin_Exp (Value(BoolV true), Neq, e) }
+  | NOT; e = expr                                                          { Bin_Exp (Value(BoolV true), Neq, Func_App("bool", [e])) }
   | a = expr; IN; b = expr                                                { Bin_Exp (a, In, b) }
+  | a = expr; NOTIN; b = expr                                                { Bin_Exp(Value(BoolV true), Neq, Bin_Exp (a, In, b)) }
   | LBRACKET; elts = separated_list(COMMA, expr); RBRACKET                { ListE elts }
   | LPAREN; e = expr; RPAREN                                              { e }
   | a = expr; LBRACKET; i = expr; RBRACKET                                 { AccessE(a, i) }

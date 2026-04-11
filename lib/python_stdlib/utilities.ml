@@ -118,6 +118,29 @@ module List_impl = struct
           | _ -> Exception("TypeError: list() takes at most 1 argument")
 end
 
+module Bool_impl = struct
+
+    let f_on:func_oncall = Helper.Helper_Generator.generate_fon_args 0 1 "bool"
+
+    let f_off:func_offcall = Helper.Helper_Generator.generate_foff_args ()
+
+    let f (state: program_state) : value =
+        let args = Hash_utils.get_variable state "__args" in
+        match args with
+          | Some(Value(ListV([]))) -> BoolV false
+          | Some(Value(ListV([arg]))) ->
+            (match arg with
+              | ListV(l) -> (match l with [] -> BoolV false | _ -> BoolV true)
+              | StringV(x) -> BoolV (String.length x > 0)
+              | FloatV(x) -> BoolV (not (Float.equal x 0.))
+              | IntV(x) -> BoolV (not (Int.equal x 0))
+              | BoolV(x) -> arg
+              | DictV(x) -> BoolV (not (Hashtbl.is_empty x))
+              | _ -> Exception("TypeError: '" ^ Sexp.to_string (sexp_of_value arg) ^ "' object is not convertable to bool.")
+            )
+          | _ -> Exception("TypeError: bool() takes at most 1 argument")
+end
+
 module Len_impl = struct
 
     let f_on:func_oncall = Helper.Helper_Generator.generate_fon_args 1 1 "len"
@@ -131,6 +154,7 @@ module Len_impl = struct
             (match arg with
               | ListV(x) -> IntV(List.length x)
               | StringV(x) -> IntV(String.length x)
+              | DictV(x) -> IntV(Hashtbl.length x)
               | _ -> Exception("TypeError: object of type '" ^ Sexp.to_string (sexp_of_value arg) ^ "' has no len()")
             )
           | _ -> Exception("TypeError: len() takes exactly one argument")
@@ -143,4 +167,5 @@ let load_impls (state: program_state) : unit =
     Utils.Hash_utils.add_variable state "str" (Value(Function(Func_Opq(Str_impl.f), Str_impl.f_on, Str_impl.f_off)));
     Utils.Hash_utils.add_variable state "float" (Value(Function(Func_Opq(Float_impl.f), Float_impl.f_on, Float_impl.f_off)));
     Utils.Hash_utils.add_variable state "list" (Value(Function(Func_Opq(List_impl.f), List_impl.f_on, List_impl.f_off)));
+    Utils.Hash_utils.add_variable state "bool" (Value(Function(Func_Opq(Bool_impl.f), Bool_impl.f_on, Bool_impl.f_off)));
     Utils.Hash_utils.add_variable state "len" (Value(Function(Func_Opq(Len_impl.f), Len_impl.f_on, Len_impl.f_off)));
