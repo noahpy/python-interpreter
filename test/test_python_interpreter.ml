@@ -54,6 +54,7 @@ print(l)
          (min ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (pow ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (print ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (print_ir ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (range ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (sqrt ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (str ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
@@ -95,6 +96,7 @@ print(l)
          (min ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (pow ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (print ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
+         (print_ir ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (range ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (sqrt ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
          (str ((Value (Function ((Func_Opq <opaque>) <opaque> <opaque>)))))
@@ -334,11 +336,7 @@ f(0)
 print(y)
 |} in
     interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
-    [%expect {|
-      Exception at statement 2:
-      NameError: name 'y' is not defined
-      Error: Program failed.
-      |}]
+    [%expect {| Error: NameError: name y is not defined. |}]
 
 
 let%expect_test "Wrong indentation should create an error" =
@@ -523,7 +521,7 @@ print(6 in [1, 2, 3, "wow"])
 |} in
     interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
     [%expect {|
-      {2 : 5, "test" : 7, 3 : 6, 1 : 4}
+      {2: 5, "test": 7, 3: 6, 1: 4}
       True
       False
       True
@@ -556,7 +554,7 @@ print("test" in ["nope", False])
 |} in
     interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
     [%expect {|
-      {2 : 5, "test" : 7, 3 : 6, 1 : 4}
+      {2: 5, "test": 7, 3: 6, 1: 4}
       True False True
       False
 
@@ -572,7 +570,7 @@ d = {1: "t", "jesus": True, False: 3.14, 3.14: "pi", "pi": 3.14, 3: "three", []:
 print(d[1], d["jesus"], d[False], d[3.14], d["pi"], d[3], d[[]], d[None])
 |} in
     interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
-    [%expect {| t True 3.14 pi 3.14 three {"dict inside dict" : True} None |}]
+    [%expect {| t True 3.14 pi 3.14 three {"dict inside dict": True} None |}]
 
 let%expect_test "Test list and dict access (4)" =
     let program = {|
@@ -1069,4 +1067,34 @@ print(pow(max(nums), 2))
       81
       |}]
 
+let%expect_test "Test reference passing" =
+    let program = {|
+d = {}
+l = [[1,2], [2,3], [3,4], [5,6]]
 
+def f(d, l):
+    if l:
+        d[l[0][0]] = l[0][1]
+        f(d, l[1:])
+
+f(d, l)
+print(d)
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {||}]
+
+let%expect_test "Test reference passing" =
+    let program = {|
+d = {}
+l = [[1,2], [2,3], [3,4], [5,6]]
+
+def f(x, s):
+    if s:
+        x[s[0][0]] = s[0][1]
+        f(x, s[1:])
+
+f(d, l)
+print(d)
+|} in
+    interpret ~file_name:program ~print_values:false ~load_stdlib:true ~interpret_string:true ();
+    [%expect {||}]
