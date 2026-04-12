@@ -44,10 +44,4 @@ let get_var_stacklen (prog: program_state) (name: string) : int =
 
 
 let rec resolve_reference (name: string) (index: int) (prog: program_state) : (string * int) =
-    let adjusted_i = (get_var_stacklen prog name) - index in
-    let res = get_nth_variable_exn prog name adjusted_i in
-    match res with
-      | Value(RefV(new_name, i)) ->
-              resolve_reference new_name i prog
-      | _ -> (name, adjusted_i)
-
+    ("", 0)

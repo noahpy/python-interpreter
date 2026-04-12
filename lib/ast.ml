@@ -110,7 +110,7 @@ let rec value_to_output (val_x: value) : unit =
       | Ntwo -> print_endline "None"
       | Function f -> print_endline "Function"
       | ListV x -> printf "[%s]\n" (String.concat ~sep:", " (List.map x ~f:(fun x -> value_to_str x)))
-      | DictV h -> printf "{%s}\n" (String.concat ~sep:", " (List.map (Hashtbl.to_alist h) ~f:(fun (k, v) -> k^" : "^value_to_str v)))
+      | DictV h -> printf "{%s}\n" (String.concat ~sep:", " (List.map (Hashtbl.to_alist h) ~f:(fun (k, v) -> k^": "^value_to_str v)))
 
 and value_to_str ?(add_paren: bool = false) (val_x: value) : string = 
     match val_x with
@@ -122,7 +122,7 @@ and value_to_str ?(add_paren: bool = false) (val_x: value) : string =
       | Ntwo -> "None"
       | Function f -> "Function"
       | ListV x -> "[" ^ String.concat ~sep:", " (List.map x ~f:(fun x -> value_to_str ~add_paren:true x)) ^ "]"
-      | DictV h -> "{" ^ String.concat ~sep:", " (List.map (Hashtbl.to_alist h) ~f:(fun (k, v) -> k^" : "^value_to_str ~add_paren:true v)) ^ "}"
+      | DictV h -> "{" ^ String.concat ~sep:", " (List.map (Hashtbl.to_alist h) ~f:(fun (k, v) -> k^": "^value_to_str ~add_paren:true v)) ^ "}"
 
 and expr_to_str (exp: expr) : string =
     let bin_op_to_str (op: bin_op) : string =
@@ -149,7 +149,7 @@ and expr_to_str (exp: expr) : string =
       | Func_App (x, args) -> x ^ "(" ^ String.concat ~sep:", " (List.map args ~f:expr_to_str) ^ ")"
       | ListE x -> "[" ^ String.concat ~sep:", " (List.map x ~f:expr_to_str) ^ "]"
       | AccessE (x1, x2) -> "(" ^ (expr_to_str x1) ^ "[" ^ (expr_to_str x2) ^ "]"
-      | DictE x -> "{" ^ String.concat ~sep:", " (List.map x ~f:(fun (k, v) -> (expr_to_str k) ^ " : " ^ (expr_to_str v))) ^ "}"
+      | DictE x -> "{" ^ String.concat ~sep:", " (List.map x ~f:(fun (k, v) -> (expr_to_str k) ^ ": " ^ (expr_to_str v))) ^ "}"
       | SliceE (s, e, st) ->
           let part = function None -> "" | Some x -> expr_to_str x in
           (match st with
