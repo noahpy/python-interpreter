@@ -294,7 +294,7 @@ and eval_fundef (name: string) (params: string list) (body: statement list)
     Hash_utils.replace_variable prog name (Value (Function (f, f_on, f_off)))
 
 
-and assign_var (name: string) (exp: expr) (index: expr option) (prog: program_state) : unit =
+and eval_assign_var (name: string) (exp: expr) (index: expr option) (prog: program_state) : unit =
     (* Handle variable assignment *)
     let handle_index_assign (name: string) (exp: expr) (index: expr) (prog: program_state) : unit =
         let index_val = eval_expr_exp index prog in
@@ -303,9 +303,14 @@ and assign_var (name: string) (exp: expr) (index: expr option) (prog: program_st
           | ListV l -> (
               match index_val with
                 | IntV i -> 
-                    let new_val = eval_expr_exp exp prog in
-                    let new_list = List.mapi l ~f:(fun j v -> if j = i then new_val else v) in
-                    Hash_utils.replace_variable prog name (Value(ListV new_list))
+                    let length = List.length l in
+                    let adjusted_i = if i < 0 then i + length else i in
+                    if adjusted_i < 0 || adjusted_i >= length then 
+                        raise (Failure ("IndexError: list " ^ name ^ "index out of range with: " ^ Int.to_string i))
+                    else
+                        let new_val = eval_expr_exp exp prog in
+                        let new_list = List.mapi l ~f:(fun j v -> if j = adjusted_i then new_val else v) in
+                        Hash_utils.replace_variable prog name (Value(ListV new_list))
                 | _ -> raise (Failure "TypeError: indices must be integers")
               )
           | DictV h -> (
@@ -342,7 +347,7 @@ and eval_program (prog:program_state) : value =
     let interpret_helper (stat: statement) (prog:program_state) : value option =
         match stat with
           | Expr(exp) -> eval_expr_top exp prog; None;
-          | Assign(name, exp, index) -> assign_var name exp index prog; None;
+          | Assign(name, exp, index) -> eval_assign_var name exp index prog; None;
           | Func_Def(name, f_on, f, f_off) -> Hash_utils.add_variable prog name (Value(Function(f_on, f, f_off))); None;
           | Return(exp) -> Some (eval_expr exp prog)
           | Pass -> None;
